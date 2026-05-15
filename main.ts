@@ -118,10 +118,14 @@ function get_friction_for_ball (ball: any[]) {
     assets.tile`myTile10`,
     assets.tile`myTile11`,
     assets.tile`myTile12`,
-    assets.tile`myTile13`
+    assets.tile`myTile13`,
+    assets.tile`myTile22`,
+    assets.tile`myTile23`,
+    assets.tile`myTile24`,
+    assets.tile`myTile25`
     ])) {
         return 25
-    } else if (tile_at_ball_is_one_of_these(ball, [])) {
+    } else if (tile_at_ball_is_one_of_these(ball, [assets.tile`myTile14`])) {
         return 75
     } else {
         return 1e+22
