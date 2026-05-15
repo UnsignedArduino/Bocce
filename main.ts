@@ -23,7 +23,7 @@ function get_friction_for_ball (ball: number[]) {
     if (tiles.tileAtLocationEquals(xy_to_loc(ball[1], ball[2]), assets.tile`myTile`)) {
         return 50
     } else if (tiles.tileAtLocationEquals(xy_to_loc(ball[1], ball[2]), assets.tile`myTile0`)) {
-        return 200
+        return 100
     } else {
         return 1e+22
     }
@@ -240,6 +240,7 @@ function balls_physics_tick_do_collisions (state: number[][], dt: number) {
 function xy_to_loc (x: number, y: number) {
     return tiles.getTileLocation(Math.floor(x / 16), Math.floor(y / 16))
 }
+let local_global_state: number[][] = []
 let local_dot = 0
 let local_M = 0
 let local_overlap = 0
@@ -272,9 +273,12 @@ timer.background(function () {
     }
     local_current_balls_state = get_balls_states(sprites.allOfKind(SpriteKind.Player))
     throw_ball_ui(sprites_red_balls[0], local_current_balls_state)
-    while (true) {
-        balls_physics_tick(local_current_balls_state, 0.01)
-        set_balls_states(sprites.allOfKind(SpriteKind.Player), local_current_balls_state)
-        pause(10)
+    set_balls_states(sprites.allOfKind(SpriteKind.Player), local_current_balls_state)
+})
+game.onUpdate(function () {
+    local_global_state = get_balls_states(sprites.allOfKind(SpriteKind.Player))
+    for (let index = 0; index < 4; index++) {
+        balls_physics_tick(local_global_state, 1 / 30 / 4)
     }
+    set_balls_states(sprites.allOfKind(SpriteKind.Player), local_global_state)
 })
