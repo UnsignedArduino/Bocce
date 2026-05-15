@@ -105,6 +105,7 @@ function hide_other_balls () {
 function get_friction_for_ball (ball: any[]) {
     if (tile_at_ball_is_one_of_these(ball, [
     assets.tile`myTile`,
+    assets.tile`myTile0`,
     assets.tile`myTile1`,
     assets.tile`myTile2`,
     assets.tile`myTile3`,
@@ -114,25 +115,13 @@ function get_friction_for_ball (ball: any[]) {
     assets.tile`myTile7`,
     assets.tile`myTile8`,
     assets.tile`myTile9`,
-    assets.tile`myTile10`
-    ])) {
-        return 25
-    } else if (tile_at_ball_is_one_of_these(ball, [
-    assets.tile`myTile0`,
+    assets.tile`myTile10`,
     assets.tile`myTile11`,
     assets.tile`myTile12`,
-    assets.tile`myTile13`,
-    assets.tile`myTile14`,
-    assets.tile`myTile15`,
-    assets.tile`myTile17`,
-    assets.tile`myTile18`,
-    assets.tile`myTile19`,
-    assets.tile`myTile20`,
-    assets.tile`myTile21`,
-    assets.tile`myTile23`,
-    assets.tile`myTile24`,
-    assets.tile`myTile25`
+    assets.tile`myTile13`
     ])) {
+        return 25
+    } else if (tile_at_ball_is_one_of_these(ball, [])) {
         return 75
     } else {
         return 1e+22
@@ -454,7 +443,7 @@ function count_points () {
     return [local_scoring_team, text.stringify(local_points)]
 }
 function xy_to_loc (x: number, y: number) {
-    return tiles.getTileLocation(Math.floor(x / 16), Math.floor(y / 16))
+    return tiles.getTileLocation(Math.floor(x / tiles.tileWidth()), Math.floor(y / tiles.tileWidth()))
 }
 let local_scoring_team = ""
 let local_closest_ball3: Sprite = null
@@ -495,7 +484,7 @@ let sprites_red_balls: Sprite[] = []
 let DEBUG = false
 DEBUG = false
 timer.background(function () {
-    tiles.setCurrentTilemap(tilemap`level1`)
+    tiles.loadMap(tiles.createSmallMap(tilemap`level2`))
     init_balls()
     hide_other_balls()
     throw_pallino()
