@@ -1,8 +1,4 @@
-function tick_balls_states (ball_states: any[], dt: number) {
-    return [0]
-}
 function init_balls () {
-    local_next_ball_id = 0
     sprite_pallino = sprites.create(img`
         . 1 1 1 . 
         1 1 1 1 1 
@@ -11,9 +7,6 @@ function init_balls () {
         . 1 1 1 . 
         `, SpriteKind.Player)
     sprites.setDataString(sprite_pallino, "ball_type", "pallino")
-    sprites.setDataNumber(sprite_pallino, "ball_mass", 0.333)
-    sprites.setDataNumber(sprite_pallino, "ball_id", local_next_ball_id)
-    local_next_ball_id += 1
     sprites_red_balls = []
     for (let index = 0; index < 4; index++) {
         local_sprite_ball = sprites.create(img`
@@ -28,8 +21,6 @@ function init_balls () {
             . . 2 2 2 2 2 . . 
             `, SpriteKind.Player)
         sprites.setDataString(local_sprite_ball, "ball_type", "red")
-        sprites.setDataNumber(local_sprite_ball, "ball_mass", 1)
-        sprites.setDataNumber(local_sprite_ball, "ball_id", local_next_ball_id)
         sprites_red_balls.push(local_sprite_ball)
         local_next_ball_id += 1
     }
@@ -47,22 +38,59 @@ function init_balls () {
             . . 7 7 7 7 7 . . 
             `, SpriteKind.Player)
         sprites.setDataString(local_sprite_ball, "ball_type", "green")
-        sprites.setDataNumber(local_sprite_ball, "ball_mass", 1)
-        sprites.setDataNumber(local_sprite_ball, "ball_id", local_next_ball_id)
         sprites_green_balls.push(local_sprite_ball)
-        local_next_ball_id += 1
     }
+    local_next_ball_id = 0
+    for (let local_ball2 of sprites.allOfKind(SpriteKind.Player)) {
+        sprites.setDataNumber(local_ball2, "ball_id", local_next_ball_id)
+        local_next_ball_id += 1
+        sprites.setDataNumber(local_ball2, "ball_vx", 0)
+        sprites.setDataNumber(local_ball2, "ball_vy", 0)
+        sprites.setDataNumber(local_ball2, "ball_mass", 3)
+        sprites.setDataNumber(local_ball2, "ball_radius", 5)
+    }
+    sprites.setDataNumber(sprite_pallino, "ball_mass", 1)
+    sprites.setDataNumber(sprite_pallino, "ball_radius", 3)
 }
 function get_balls_states (balls: any[]) {
-    local_ball_states = [0]
+    local_ball_states = []
+    for (let local_ball of balls) {
+        local_ball_state = [
+        sprites.readDataNumber(local_ball, "ball_id"),
+        local_ball.x,
+        local_ball.y,
+        sprites.readDataNumber(local_ball, "ball_vx"),
+        sprites.readDataNumber(local_ball, "ball_vy"),
+        sprites.readDataNumber(local_ball, "ball_mass"),
+        sprites.readDataNumber(local_ball, "ball_radius")
+        ]
+        local_ball_states.push(local_ball_state)
+    }
     return local_ball_states
 }
-function set_balls_states (balls: any[], new_state: any[]) {
-	
+function balls_physics_tick (state: any[], dt: number) {
+    return state
 }
-let local_ball_states: number[] = []
-let local_sprite_ball: Sprite = null
+function set_balls_states (balls: any[], new_states: number[][]) {
+    new_states.push([0, 1])
+    new_states.pop()
+    for (let local_ball_state2 of new_states) {
+        for (let local_ball3 of balls) {
+            if (sprites.readDataNumber(local_ball3, "ball_id") == local_ball_state2[0]) {
+                local_ball3.setPosition(local_ball_state2[1], local_ball_state2[2])
+                sprites.setDataNumber(local_ball3, "ball_vx", local_ball_state2[3])
+                sprites.setDataNumber(local_ball3, "ball_vy", local_ball_state2[4])
+                sprites.setDataNumber(local_ball3, "ball_mass", [0][5])
+                sprites.setDataNumber(local_ball3, "ball_radius", local_ball_state2[6])
+                break;
+            }
+        }
+    }
+}
+let local_ball_state: number[] = []
+let local_ball_states: number[][] = []
 let local_next_ball_id = 0
+let local_sprite_ball: Sprite = null
 let sprites_green_balls: Sprite[] = []
 let sprites_red_balls: Sprite[] = []
 let sprite_pallino: Sprite = null
@@ -78,5 +106,5 @@ sprites_green_balls[1].setPosition(46, 90)
 sprites_green_balls[2].setPosition(60, 95)
 sprites_green_balls[3].setPosition(65, 82)
 let local_current_balls_state = get_balls_states(sprites.allOfKind(SpriteKind.Player))
-let local_next_balls_states = tick_balls_states(local_current_balls_state, 1)
-set_balls_states(sprites.allOfKind(SpriteKind.Player), local_next_balls_states)
+let local_next_balls_state = balls_physics_tick(local_current_balls_state, 1)
+set_balls_states(sprites.allOfKind(SpriteKind.Player), local_next_balls_state)
