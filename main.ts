@@ -23,7 +23,7 @@ function get_friction_for_ball (ball: number[]) {
     if (tiles.tileAtLocationEquals(xy_to_loc(ball[1], ball[2]), assets.tile`myTile`)) {
         return 50
     } else if (tiles.tileAtLocationEquals(xy_to_loc(ball[1], ball[2]), assets.tile`myTile0`)) {
-        return 50000
+        return 200
     } else {
         return 1e+22
     }
@@ -82,11 +82,6 @@ function init_balls () {
     sprites.setDataNumber(sprite_pallino, "ball_mass", 1)
     sprites.setDataNumber(sprite_pallino, "ball_radius", 3)
 }
-spriteutils.createRenderable(1, function (screen2) {
-    if (!(spriteutils.isDestroyed(ball_to_draw_throw_ui_around))) {
-        screen2.drawLine(ball_to_draw_throw_ui_around.x - scene.cameraProperty(CameraProperty.Left) - 1, ball_to_draw_throw_ui_around.y - scene.cameraProperty(CameraProperty.Top) - 1, ball_to_draw_throw_ui_around.x - scene.cameraProperty(CameraProperty.Left) - 1 + throw_power / 2 * Math.cos(throw_angle * -1), ball_to_draw_throw_ui_around.y - scene.cameraProperty(CameraProperty.Top) + throw_power / 2 * Math.sin(throw_angle * -1), 15)
-    }
-})
 function get_balls_states (balls: any[]) {
     local_states = []
     for (let local_ball of balls) {
@@ -175,6 +170,11 @@ function copy_balls_state (state: number[][]) {
     }
     return local_states2
 }
+spriteutils.createRenderable(1, function (screen2) {
+    if (!(spriteutils.isDestroyed(ball_to_draw_throw_ui_around))) {
+        screen2.drawLine(ball_to_draw_throw_ui_around.x - scene.cameraProperty(CameraProperty.Left) - 1, ball_to_draw_throw_ui_around.y - scene.cameraProperty(CameraProperty.Top) - 1, ball_to_draw_throw_ui_around.x - scene.cameraProperty(CameraProperty.Left) - 1 + throw_power / 2 * Math.cos(throw_angle * -1), ball_to_draw_throw_ui_around.y - scene.cameraProperty(CameraProperty.Top) + throw_power / 2 * Math.sin(throw_angle * -1), 15)
+    }
+})
 function apply_ball_throw_to_state (angle: number, power2: number, ball_id: number, states: number[][]) {
     states.push([0, 1])
     states.pop()
@@ -238,7 +238,7 @@ function balls_physics_tick_do_collisions (state: number[][], dt: number) {
     }
 }
 function xy_to_loc (x: number, y: number) {
-    return tiles.getTileLocation(Math.floor(y / 16), Math.floor(x / 16))
+    return tiles.getTileLocation(Math.floor(x / 16), Math.floor(y / 16))
 }
 let local_dot = 0
 let local_M = 0
@@ -251,11 +251,11 @@ let local_ball_b: number[] = []
 let local_ball_a: number[] = []
 let local_state6: number[] = []
 let local_states2: number[][] = []
+let throw_power = 0
+let throw_angle = 0
+let ball_to_draw_throw_ui_around: Sprite = null
 let local_state: number[] = []
 let local_states: number[][] = []
-let throw_angle = 0
-let throw_power = 0
-let ball_to_draw_throw_ui_around: Sprite = null
 let sprites_green_balls: Sprite[] = []
 let local_next_ball_id = 0
 let local_sprite_ball: Sprite = null
