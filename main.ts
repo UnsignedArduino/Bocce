@@ -200,8 +200,6 @@ let local_next_ball_id = 0
 let local_sprite_ball: Sprite = null
 let local_delta_v = 0
 let local_speed = 0
-let local_next_balls_state: number[][] = []
-let local_current_balls_state: number[][] = []
 let sprites_green_balls: Sprite[] = []
 let sprites_red_balls: Sprite[] = []
 let sprite_pallino: Sprite = null
@@ -216,18 +214,11 @@ sprites_green_balls[0].setPosition(42, 80)
 sprites_green_balls[1].setPosition(46, 90)
 sprites_green_balls[2].setPosition(60, 95)
 sprites_green_balls[3].setPosition(65, 82)
-sprites.setDataNumber(sprites_red_balls[1], "ball_vx", 100)
-sprites.setDataNumber(sprites_red_balls[1], "ball_vy", 100)
-for (let index = 0; index < 2; index++) {
-    sprites.destroy(sprites_red_balls.removeAt(2))
-}
-for (let index = 0; index < 4; index++) {
-    sprites.destroy(sprites_green_balls.removeAt(0))
-}
-sprites.destroy(sprite_pallino)
+sprites.setDataNumber(sprites_red_balls[0], "ball_vx", -75)
+sprites.setDataNumber(sprites_red_balls[0], "ball_vy", -75)
+let local_current_balls_state = get_balls_states(sprites.allOfKind(SpriteKind.Player))
 for (let index = 0; index < 100; index++) {
-    local_current_balls_state = get_balls_states(sprites.allOfKind(SpriteKind.Player))
-    local_next_balls_state = balls_physics_tick(copy_balls_state(local_current_balls_state), 0.01)
-    set_balls_states(sprites.allOfKind(SpriteKind.Player), local_next_balls_state)
+    balls_physics_tick(local_current_balls_state, 0.01)
+    set_balls_states(sprites.allOfKind(SpriteKind.Player), local_current_balls_state)
     pause(10)
 }
