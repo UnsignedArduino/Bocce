@@ -84,7 +84,7 @@ function init_balls () {
 }
 spriteutils.createRenderable(1, function (screen2) {
     if (!(spriteutils.isDestroyed(ball_to_draw_throw_ui_around))) {
-        screen2.drawLine(ball_to_draw_throw_ui_around.x - scene.cameraProperty(CameraProperty.Left), ball_to_draw_throw_ui_around.y - scene.cameraProperty(CameraProperty.Top), ball_to_draw_throw_ui_around.x - scene.cameraProperty(CameraProperty.Left) + throw_power / 2 * Math.cos(throw_angle * -1), ball_to_draw_throw_ui_around.y - scene.cameraProperty(CameraProperty.Top) + throw_power / 2 * Math.sin(throw_angle * -1), 15)
+        screen2.drawLine(ball_to_draw_throw_ui_around.x - scene.cameraProperty(CameraProperty.Left) - 1, ball_to_draw_throw_ui_around.y - scene.cameraProperty(CameraProperty.Top) - 1, ball_to_draw_throw_ui_around.x - scene.cameraProperty(CameraProperty.Left) - 1 + throw_power / 2 * Math.cos(throw_angle * -1), ball_to_draw_throw_ui_around.y - scene.cameraProperty(CameraProperty.Top) + throw_power / 2 * Math.sin(throw_angle * -1), 15)
     }
 })
 function get_balls_states (balls: any[]) {
