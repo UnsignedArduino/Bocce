@@ -102,10 +102,22 @@ function hide_other_balls () {
     }
     set_balls_states(sprites.allOfKind(SpriteKind.Player), get_balls_states(sprites.allOfKind(SpriteKind.Player)))
 }
-function get_friction_for_ball (ball: number[]) {
-    if (tiles.tileAtLocationEquals(xy_to_loc(ball[1], ball[2]), assets.tile`myTile`)) {
+function get_friction_for_ball (ball: any[]) {
+    if (tile_at_ball_is_one_of_these(ball, [
+    assets.tile`myTile`,
+    assets.tile`myTile1`,
+    assets.tile`myTile2`,
+    assets.tile`myTile3`,
+    assets.tile`myTile4`,
+    assets.tile`myTile5`,
+    assets.tile`myTile6`,
+    assets.tile`myTile7`,
+    assets.tile`myTile8`,
+    assets.tile`myTile9`,
+    assets.tile`myTile10`
+    ])) {
         return 25
-    } else if (tiles.tileAtLocationEquals(xy_to_loc(ball[1], ball[2]), assets.tile`myTile0`)) {
+    } else if (tile_at_ball_is_one_of_these(ball, [assets.tile`myTile0`])) {
         return 75
     } else {
         return 1e+22
@@ -165,6 +177,14 @@ function init_balls () {
     }
     sprites.setDataNumber(sprite_pallino, "ball_mass", 1)
     sprites.setDataNumber(sprite_pallino, "ball_radius", 3)
+}
+function tile_at_ball_is_one_of_these (ball: number[], tile_images: any[]) {
+    for (let local_tile_image of tile_images) {
+        if (tiles.tileAtLocationEquals(xy_to_loc(ball[1], ball[2]), local_tile_image)) {
+            return true
+        }
+    }
+    return false
 }
 function get_balls_states (balls: any[]) {
     local_states = []
