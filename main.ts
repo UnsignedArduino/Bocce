@@ -1,21 +1,42 @@
 namespace SpriteKind {
     export const Math = SpriteKind.create()
 }
+function place_other_balls_wrt_pallino () {
+    spriteutils.placeAngleFrom(
+    sprite_pallino_start_spot,
+    spriteutils.angleFrom(sprite_pallino, sprite_pallino_start_spot),
+    32,
+    sprite_pallino_start_spot
+    )
+    spriteutils.placeAngleFrom(
+    sprite_pallino_start_spot,
+    spriteutils.angleFrom(sprite_pallino, sprite_pallino_start_spot) + spriteutils.consts(spriteutils.Consts.Pi) / 2,
+    12,
+    sprite_pallino_start_spot
+    )
+    brute_force_scatter_balls_around_point(sprites_red_balls, sprite_pallino_start_spot, 10)
+    spriteutils.placeAngleFrom(
+    sprite_pallino_start_spot,
+    spriteutils.angleFrom(sprite_pallino, sprite_pallino_start_spot) - spriteutils.consts(spriteutils.Consts.Pi) / 2,
+    30,
+    sprite_pallino_start_spot
+    )
+    brute_force_scatter_balls_around_point(sprites_green_balls, sprite_pallino_start_spot, 10)
+    sprites.destroy(sprite_pallino_start_spot)
+}
 function balls_physics_tick_do_accelerations (state: number[][], dt: number) {
     state.push([0, 1])
     state.pop()
     // Apply friction from surface
     for (let local_state3 of state) {
         local_speed = Math.sqrt(local_state3[3] ** 2 + local_state3[4] ** 2)
-        if (local_speed > 0) {
-            local_delta_v = get_friction_for_ball(local_state3) * dt
-            if (local_speed < local_delta_v) {
-                local_state3[3] = 0
-                local_state3[4] = 0
-            } else {
-                local_state3[3] = local_state3[3] * ((local_speed - local_delta_v) / local_speed)
-                local_state3[4] = local_state3[4] * ((local_speed - local_delta_v) / local_speed)
-            }
+        local_delta_v = get_friction_for_ball(local_state3) * dt
+        if (local_speed > local_delta_v) {
+            local_state3[3] = local_state3[3] * ((local_speed - local_delta_v) / local_speed)
+            local_state3[4] = local_state3[4] * ((local_speed - local_delta_v) / local_speed)
+        } else {
+            local_state3[3] = 0
+            local_state3[4] = 0
         }
     }
 }
@@ -24,7 +45,8 @@ function throw_ball_ui_and_wait_for_stop (ball: Sprite) {
     throw_ball_ui(ball, local_current_balls_state)
     set_balls_states(sprites.allOfKind(SpriteKind.Player), local_current_balls_state)
     scene.cameraFollowSprite(ball)
-    while (are_all_balls_stopped(global_ball_state)) {
+    pause(100)
+    while (!(are_all_balls_stopped(global_ball_state))) {
         pause(100)
     }
     sprites.setDataBoolean(ball, "ball_thrown", true)
@@ -137,10 +159,10 @@ function balls_physics_tick_do_velocities (state: number[][], dt: number) {
     for (let local_state3 of state) {
         local_state3[1] = local_state3[1] + local_state3[3] * dt
         local_state3[2] = local_state3[2] + local_state3[4] * dt
-        if (Math.abs(local_state3[3]) < 0.0001) {
+        if (Math.abs(local_state3[3]) < 0.001) {
             local_state3[3] = 0
         }
-        if (Math.abs(local_state3[4]) < 0.0001) {
+        if (Math.abs(local_state3[4]) < 0.001) {
             local_state3[4] = 0
         }
     }
@@ -207,16 +229,14 @@ function throw_pallino () {
         local_current_balls_state = get_balls_states(sprites.allOfKind(SpriteKind.Player))
         apply_ball_throw_to_state(0, 50, sprites.readDataNumber(sprite_pallino, "ball_id"), local_current_balls_state)
         set_balls_states(sprites.allOfKind(SpriteKind.Player), local_current_balls_state)
-        scene.cameraFollowSprite(sprite_pallino)
-        while (are_all_balls_stopped(global_ball_state)) {
+        pause(100)
+        while (!(are_all_balls_stopped(global_ball_state))) {
             pause(100)
         }
         sprites.setDataBoolean(sprite_pallino, "ball_thrown", true)
     } else {
         throw_ball_ui_and_wait_for_stop(sprite_pallino)
     }
-    scatter_balls_around_point(arrays.toConcated(sprites_red_balls, sprites_green_balls), sprite_pallino)
-    sprites.destroy(sprite_pallino_start_spot)
 }
 function are_all_balls_stopped (state: number[][]) {
     state.push([0, 1])
@@ -257,6 +277,20 @@ function apply_ball_throw_to_state (angle: number, power2: number, ball_id: numb
     }
     local_state6[3] = power2 * Math.cos(angle * -1)
     local_state6[4] = power2 * Math.sin(angle * -1)
+}
+function brute_force_scatter_balls_around_point (balls: Sprite[], math_sprite: Sprite, try_radius: number) {
+    balls.push(sprites.create(img`
+        . 
+        `, SpriteKind.Math))
+    sprites.destroy(balls.pop())
+    for (let local_ball4 of balls) {
+        spriteutils.placeAngleFrom(
+        local_ball4,
+        randint(0, 628318) / 100000,
+        randint(0, try_radius),
+        math_sprite
+        )
+    }
 }
 // 0: id
 // 1: x
@@ -308,18 +342,6 @@ function balls_physics_tick_do_collisions (state: number[][], dt: number) {
         }
     }
 }
-function scatter_balls_around_point (balls: number[], math_sprite: Sprite) {
-    for (let local_ball4 of balls) {
-        while (these_sprites_are_overlapping(balls)) {
-            spriteutils.placeAngleFrom(
-            local_ball4,
-            randint(0, 16),
-            randint(0, 16),
-            math_sprite
-            )
-        }
-    }
-}
 function xy_to_loc (x: number, y: number) {
     return tiles.getTileLocation(Math.floor(x / 16), Math.floor(y / 16))
 }
@@ -335,7 +357,6 @@ let local_ball_a: number[] = []
 let local_state6: number[] = []
 let local_sprite_b: Sprite = null
 let local_sprite_a: Sprite = null
-let sprite_pallino_start_spot: Sprite = null
 let local_states2: number[][] = []
 let throw_power = 0
 let throw_angle = 0
@@ -344,20 +365,22 @@ let local_state: number[] = []
 let local_states: number[][] = []
 let local_next_ball_id = 0
 let local_sprite_ball: Sprite = null
-let sprite_pallino: Sprite = null
-let sprites_green_balls: Sprite[] = []
-let sprites_red_balls: Sprite[] = []
 let global_ball_state: number[][] = []
 let local_current_balls_state: number[][] = []
 let local_delta_v = 0
 let local_speed = 0
+let sprites_green_balls: Sprite[] = []
+let sprites_red_balls: Sprite[] = []
+let sprite_pallino: Sprite = null
+let sprite_pallino_start_spot: Sprite = null
 let DEBUG = false
-DEBUG = true
+DEBUG = false
 timer.background(function () {
     tiles.setCurrentTilemap(tilemap`level1`)
     init_balls()
     hide_other_balls()
     throw_pallino()
+    place_other_balls_wrt_pallino()
 })
 game.onUpdate(function () {
     global_ball_state = get_balls_states(sprites.allOfKind(SpriteKind.Player))
