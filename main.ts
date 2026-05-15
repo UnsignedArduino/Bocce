@@ -113,6 +113,12 @@ function balls_physics_tick_do_velocities (state: number[][], dt: number) {
     for (let local_state3 of state) {
         local_state3[1] = local_state3[1] + local_state3[3] * dt
         local_state3[2] = local_state3[2] + local_state3[4] * dt
+        if (Math.abs(local_state3[3]) < 0.0001) {
+            local_state3[3] = 0
+        }
+        if (Math.abs(local_state3[4]) < 0.0001) {
+            local_state3[4] = 0
+        }
     }
 }
 function copy_balls_state (state: number[][]) {
@@ -157,15 +163,15 @@ function balls_physics_tick_do_collisions (state: number[][], dt: number) {
             local_ball_b = state[index2 + (index + 1)]
             local_dx = local_ball_a[1] - local_ball_b[1]
             local_dy = local_ball_a[2] - local_ball_b[2]
-            if (local_dx ** 2 + local_dy ** 2 < (local_ball_a[6] + local_ball_b[6]) ** 2) {
-                local_dist = dist_between_balls(local_ball_a, local_ball_b)
+            local_dist_sq = local_dx ** 2 + local_dy ** 2
+            if (local_dist_sq < (local_ball_a[6] + local_ball_b[6]) ** 2) {
+                local_dist = Math.sqrt(local_dist_sq)
                 local_overlap = local_ball_a[6] + local_ball_b[6] - local_dist
                 local_M = local_ball_a[5] + local_ball_b[5]
                 local_ball_a[1] = local_ball_a[1] + local_dx / local_dist * (local_overlap * (local_ball_b[5] / local_M))
                 local_ball_a[2] = local_ball_a[2] + local_dy / local_dist * (local_overlap * (local_ball_b[5] / local_M))
                 local_ball_b[1] = local_ball_b[1] - local_dx / local_dist * (local_overlap * (local_ball_a[5] / local_M))
                 local_ball_b[2] = local_ball_b[2] - local_dy / local_dist * (local_overlap * (local_ball_a[5] / local_M))
-                local_dist_sq = local_dist ** 2
                 local_dot = (local_ball_a[3] - local_ball_b[3]) * (local_ball_a[1] - local_ball_b[1]) + (local_ball_a[4] - local_ball_b[4]) * (local_ball_a[2] - local_ball_b[2])
                 local_ball_a[3] = local_ball_a[3] - 2 * local_ball_b[5] / local_M * (local_dot / local_dist_sq * (local_ball_a[1] - local_ball_b[1]))
                 local_ball_a[4] = local_ball_a[4] - 2 * local_ball_b[5] / local_M * (local_dot / local_dist_sq * (local_ball_a[2] - local_ball_b[2]))
@@ -179,10 +185,10 @@ function xy_to_loc (x: number, y: number) {
     return tiles.getTileLocation(Math.floor(y / tiles.getTileLocation(0, 0).right), Math.floor(x / tiles.getTileLocation(0, 0).right))
 }
 let local_dot = 0
-let local_dist_sq = 0
 let local_M = 0
 let local_overlap = 0
 let local_dist = 0
+let local_dist_sq = 0
 let local_dy = 0
 let local_dx = 0
 let local_ball_b: number[] = []
