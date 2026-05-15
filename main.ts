@@ -21,11 +21,12 @@ function dist_between_balls (b1: number[], b2: number[]) {
 }
 function get_friction_for_ball (ball: number[]) {
     if (tiles.tileAtLocationEquals(xy_to_loc(ball[1], ball[2]), assets.tile`myTile`)) {
-        return 200
+        return 50
+    } else if (tiles.tileAtLocationEquals(xy_to_loc(ball[1], ball[2]), assets.tile`myTile0`)) {
+        return 50000
     } else {
-    	
+        return 1e+22
     }
-    return 0
 }
 function init_balls () {
     sprite_pallino = sprites.create(img`
@@ -81,6 +82,11 @@ function init_balls () {
     sprites.setDataNumber(sprite_pallino, "ball_mass", 1)
     sprites.setDataNumber(sprite_pallino, "ball_radius", 3)
 }
+spriteutils.createRenderable(1, function (screen2) {
+    if (!(spriteutils.isDestroyed(ball_to_draw_throw_ui_around))) {
+        screen2.drawLine(ball_to_draw_throw_ui_around.x - scene.cameraProperty(CameraProperty.Left), ball_to_draw_throw_ui_around.y - scene.cameraProperty(CameraProperty.Top), ball_to_draw_throw_ui_around.x - scene.cameraProperty(CameraProperty.Left) + throw_power / 2 * Math.cos(throw_angle * -1), ball_to_draw_throw_ui_around.y - scene.cameraProperty(CameraProperty.Top) + throw_power / 2 * Math.sin(throw_angle * -1), 15)
+    }
+})
 function get_balls_states (balls: any[]) {
     local_states = []
     for (let local_ball of balls) {
@@ -121,6 +127,44 @@ function balls_physics_tick_do_velocities (state: number[][], dt: number) {
         }
     }
 }
+function throw_ball_ui (ball: Sprite, states: any[]) {
+    ball_to_draw_throw_ui_around = ball
+    throw_angle = 0
+    throw_power = 50
+    while (true) {
+        if (controller.A.isPressed()) {
+            break;
+        } else if (controller.B.isPressed()) {
+            scene.cameraFollowSprite(null)
+            if (controller.up.isPressed() && !(controller.down.isPressed())) {
+                scene.centerCameraAt(scene.cameraProperty(CameraProperty.X) + 0, scene.cameraProperty(CameraProperty.Y) + -1)
+            } else if (controller.down.isPressed() && !(controller.up.isPressed())) {
+                scene.centerCameraAt(scene.cameraProperty(CameraProperty.X) + 0, scene.cameraProperty(CameraProperty.Y) + 1)
+            }
+            if (controller.left.isPressed() && !(controller.right.isPressed())) {
+                scene.centerCameraAt(scene.cameraProperty(CameraProperty.X) + -1, scene.cameraProperty(CameraProperty.Y) + 0)
+            } else if (controller.right.isPressed() && !(controller.left.isPressed())) {
+                scene.centerCameraAt(scene.cameraProperty(CameraProperty.X) + 1, scene.cameraProperty(CameraProperty.Y) + 0)
+            }
+        } else {
+            scene.cameraFollowSprite(ball)
+            if (controller.up.isPressed() && !(controller.down.isPressed())) {
+                throw_power = Math.constrain(throw_power + 0.1, 10, 100)
+            } else if (controller.down.isPressed() && !(controller.up.isPressed())) {
+                throw_power = Math.constrain(throw_power - 0.1, 10, 100)
+            }
+            if (controller.left.isPressed() && !(controller.right.isPressed())) {
+                throw_angle += spriteutils.consts(spriteutils.Consts.Pi) / 180
+            } else if (controller.right.isPressed() && !(controller.left.isPressed())) {
+                throw_angle += spriteutils.consts(spriteutils.Consts.Pi) / -180
+            }
+        }
+        pause(0)
+    }
+    ball_to_draw_throw_ui_around = spriteutils.nullConsts(spriteutils.NullConsts.Null)
+    apply_ball_throw_to_state(throw_angle, throw_power, sprites.readDataNumber(ball, "ball_id"), states)
+    scene.cameraFollowSprite(null)
+}
 function copy_balls_state (state: number[][]) {
     state.push([0, 1])
     state.pop()
@@ -130,6 +174,18 @@ function copy_balls_state (state: number[][]) {
         local_states2.push(arrays.copy(local_state4))
     }
     return local_states2
+}
+function apply_ball_throw_to_state (angle: number, power2: number, ball_id: number, states: number[][]) {
+    states.push([0, 1])
+    states.pop()
+    for (let local_state5 of states) {
+        if (local_state5[0] == ball_id) {
+            local_state6 = local_state5
+            break;
+        }
+    }
+    local_state6[3] = power2 * Math.cos(angle * -1)
+    local_state6[4] = power2 * Math.sin(angle * -1)
 }
 // 0: id
 // 1: x
@@ -182,7 +238,7 @@ function balls_physics_tick_do_collisions (state: number[][], dt: number) {
     }
 }
 function xy_to_loc (x: number, y: number) {
-    return tiles.getTileLocation(Math.floor(y / tiles.getTileLocation(0, 0).right), Math.floor(x / tiles.getTileLocation(0, 0).right))
+    return tiles.getTileLocation(Math.floor(y / 16), Math.floor(x / 16))
 }
 let local_dot = 0
 let local_M = 0
@@ -193,32 +249,32 @@ let local_dy = 0
 let local_dx = 0
 let local_ball_b: number[] = []
 let local_ball_a: number[] = []
+let local_state6: number[] = []
 let local_states2: number[][] = []
 let local_state: number[] = []
 let local_states: number[][] = []
+let throw_angle = 0
+let throw_power = 0
+let ball_to_draw_throw_ui_around: Sprite = null
+let sprites_green_balls: Sprite[] = []
 let local_next_ball_id = 0
 let local_sprite_ball: Sprite = null
+let sprite_pallino: Sprite = null
 let local_delta_v = 0
 let local_speed = 0
-let sprites_green_balls: Sprite[] = []
 let sprites_red_balls: Sprite[] = []
-let sprite_pallino: Sprite = null
-tiles.setCurrentTilemap(tilemap`level1`)
-init_balls()
-sprite_pallino.setPosition(88, 58)
-sprites_red_balls[0].setPosition(45, 44)
-sprites_red_balls[1].setPosition(18, 18)
-sprites_red_balls[2].setPosition(28, 29)
-sprites_red_balls[3].setPosition(40, 11)
-sprites_green_balls[0].setPosition(42, 80)
-sprites_green_balls[1].setPosition(46, 90)
-sprites_green_balls[2].setPosition(60, 95)
-sprites_green_balls[3].setPosition(65, 82)
-sprites.setDataNumber(sprites_red_balls[0], "ball_vx", -75)
-sprites.setDataNumber(sprites_red_balls[0], "ball_vy", -75)
-let local_current_balls_state = get_balls_states(sprites.allOfKind(SpriteKind.Player))
-for (let index = 0; index < 100; index++) {
-    balls_physics_tick(local_current_balls_state, 0.01)
-    set_balls_states(sprites.allOfKind(SpriteKind.Player), local_current_balls_state)
-    pause(10)
-}
+let local_current_balls_state: number[][] = []
+timer.background(function () {
+    tiles.setCurrentTilemap(tilemap`level1`)
+    init_balls()
+    for (let local_ball of sprites.allOfKind(SpriteKind.Player)) {
+        local_ball.setPosition(randint(16, 144), randint(16, 104))
+    }
+    local_current_balls_state = get_balls_states(sprites.allOfKind(SpriteKind.Player))
+    throw_ball_ui(sprites_red_balls[0], local_current_balls_state)
+    while (true) {
+        balls_physics_tick(local_current_balls_state, 0.01)
+        set_balls_states(sprites.allOfKind(SpriteKind.Player), local_current_balls_state)
+        pause(10)
+    }
+})
