@@ -155,16 +155,22 @@ function balls_physics_tick_do_collisions (state: number[][], dt: number) {
         for (let index2 = 0; index2 <= state.length - 1 - (index + 1); index2++) {
             local_ball_a = state[index]
             local_ball_b = state[index2 + (index + 1)]
-            local_dist = dist_between_balls(local_ball_a, local_ball_b)
-            if (local_dist < local_ball_a[6] + local_ball_b[6]) {
+            local_dx = local_ball_a[1] - local_ball_b[1]
+            local_dy = local_ball_a[2] - local_ball_b[2]
+            if (local_dx ** 2 + local_dy ** 2 < (local_ball_a[6] + local_ball_b[6]) ** 2) {
+                local_dist = dist_between_balls(local_ball_a, local_ball_b)
                 local_overlap = local_ball_a[6] + local_ball_b[6] - local_dist
-                local_dx = local_ball_a[1] - local_ball_b[1]
-                local_dy = local_ball_a[2] - local_ball_b[2]
                 local_M = local_ball_a[5] + local_ball_b[5]
                 local_ball_a[1] = local_ball_a[1] + local_dx / local_dist * (local_overlap * (local_ball_b[5] / local_M))
                 local_ball_a[2] = local_ball_a[2] + local_dy / local_dist * (local_overlap * (local_ball_b[5] / local_M))
-                local_ball_b[1] = local_ball_b[1] + local_dx / local_dist * (local_overlap * (local_ball_a[5] / local_M))
-                local_ball_b[2] = local_ball_b[2] + local_dy / local_dist * (local_overlap * (local_ball_a[5] / local_M))
+                local_ball_b[1] = local_ball_b[1] - local_dx / local_dist * (local_overlap * (local_ball_a[5] / local_M))
+                local_ball_b[2] = local_ball_b[2] - local_dy / local_dist * (local_overlap * (local_ball_a[5] / local_M))
+                local_dist_sq = local_dist ** 2
+                local_dot = (local_ball_a[3] - local_ball_b[3]) * (local_ball_a[1] - local_ball_b[1]) + (local_ball_a[4] - local_ball_b[4]) * (local_ball_a[2] - local_ball_b[2])
+                local_ball_a[3] = local_ball_a[3] - 2 * local_ball_b[5] / local_M * (local_dot / local_dist_sq * (local_ball_a[1] - local_ball_b[1]))
+                local_ball_a[4] = local_ball_a[4] - 2 * local_ball_b[5] / local_M * (local_dot / local_dist_sq * (local_ball_a[2] - local_ball_b[2]))
+                local_ball_b[3] = local_ball_b[3] + 2 * local_ball_a[5] / local_M * (local_dot / local_dist_sq * (local_ball_a[1] - local_ball_b[1]))
+                local_ball_b[4] = local_ball_b[4] + 2 * local_ball_a[5] / local_M * (local_dot / local_dist_sq * (local_ball_a[2] - local_ball_b[2]))
             }
         }
     }
@@ -172,11 +178,13 @@ function balls_physics_tick_do_collisions (state: number[][], dt: number) {
 function xy_to_loc (x: number, y: number) {
     return tiles.getTileLocation(Math.floor(y / tiles.getTileLocation(0, 0).right), Math.floor(x / tiles.getTileLocation(0, 0).right))
 }
+let local_dot = 0
+let local_dist_sq = 0
 let local_M = 0
-let local_dy = 0
-let local_dx = 0
 let local_overlap = 0
 let local_dist = 0
+let local_dy = 0
+let local_dx = 0
 let local_ball_b: number[] = []
 let local_ball_a: number[] = []
 let local_states2: number[][] = []
@@ -202,8 +210,8 @@ sprites_green_balls[0].setPosition(42, 80)
 sprites_green_balls[1].setPosition(46, 90)
 sprites_green_balls[2].setPosition(60, 95)
 sprites_green_balls[3].setPosition(65, 82)
-sprites.setDataNumber(sprites_red_balls[0], "ball_vx", -100)
-sprites.setDataNumber(sprites_red_balls[0], "ball_vy", -100)
+sprites.setDataNumber(sprites_red_balls[1], "ball_vx", 100)
+sprites.setDataNumber(sprites_red_balls[1], "ball_vy", 100)
 for (let index = 0; index < 2; index++) {
     sprites.destroy(sprites_red_balls.removeAt(2))
 }
@@ -215,5 +223,5 @@ for (let index = 0; index < 100; index++) {
     local_current_balls_state = get_balls_states(sprites.allOfKind(SpriteKind.Player))
     local_next_balls_state = balls_physics_tick(copy_balls_state(local_current_balls_state), 0.01)
     set_balls_states(sprites.allOfKind(SpriteKind.Player), local_next_balls_state)
-    pause(100)
+    pause(10)
 }
