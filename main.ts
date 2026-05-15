@@ -1,6 +1,34 @@
 namespace SpriteKind {
     export const Math = SpriteKind.create()
 }
+function throw_ball (ball: Sprite) {
+    spriteutils.placeAngleFrom(
+    ball,
+    0,
+    0,
+    sprite_pallino_start_spot
+    )
+    throw_ball_ui_and_wait_for_stop(ball)
+}
+function get_out_team () {
+    if (get_next_unthrown_ball(sprites_red_balls) == spriteutils.nullConsts(spriteutils.NullConsts.Null)) {
+        if (get_next_unthrown_ball(sprites_green_balls) == spriteutils.nullConsts(spriteutils.NullConsts.Null)) {
+            return ""
+        } else {
+            return "green"
+        }
+    }
+    if (get_next_unthrown_ball(sprites_green_balls) == spriteutils.nullConsts(spriteutils.NullConsts.Null)) {
+        return "red"
+    }
+    local_closest_ball2 = get_closest_ball_to_target(arrays.toConcated(sprites_red_balls, sprites_green_balls), sprite_pallino)
+    if (sprites.readDataString(local_closest_ball2, "ball_type") == "red") {
+        return "green"
+    } else if (sprites.readDataString(local_closest_ball2, "ball_type") == "green") {
+        return "red"
+    }
+    return ""
+}
 function place_other_balls_wrt_pallino () {
     spriteutils.placeAngleFrom(
     sprite_pallino_start_spot,
@@ -11,18 +39,29 @@ function place_other_balls_wrt_pallino () {
     spriteutils.placeAngleFrom(
     sprite_pallino_start_spot,
     spriteutils.angleFrom(sprite_pallino, sprite_pallino_start_spot) + spriteutils.consts(spriteutils.Consts.Pi) / 2,
-    12,
+    16,
     sprite_pallino_start_spot
     )
     brute_force_scatter_balls_around_point(sprites_red_balls, sprite_pallino_start_spot, 10)
     spriteutils.placeAngleFrom(
     sprite_pallino_start_spot,
     spriteutils.angleFrom(sprite_pallino, sprite_pallino_start_spot) - spriteutils.consts(spriteutils.Consts.Pi) / 2,
-    30,
+    32,
     sprite_pallino_start_spot
     )
     brute_force_scatter_balls_around_point(sprites_green_balls, sprite_pallino_start_spot, 10)
-    sprites.destroy(sprite_pallino_start_spot)
+    spriteutils.placeAngleFrom(
+    sprite_pallino_start_spot,
+    spriteutils.angleFrom(sprite_pallino, sprite_pallino_start_spot) + spriteutils.consts(spriteutils.Consts.Pi) / 2,
+    16,
+    sprite_pallino_start_spot
+    )
+    spriteutils.placeAngleFrom(
+    sprite_pallino_start_spot,
+    spriteutils.angleFrom(sprite_pallino_start_spot, sprite_pallino),
+    32,
+    sprite_pallino_start_spot
+    )
 }
 function balls_physics_tick_do_accelerations (state: number[][], dt: number) {
     state.push([0, 1])
@@ -189,9 +228,9 @@ function throw_ball_ui (ball: Sprite, states: any[]) {
         } else {
             scene.cameraFollowSprite(ball)
             if (controller.up.isPressed() && !(controller.down.isPressed())) {
-                throw_power = Math.constrain(throw_power + 0.1, 10, 100)
+                throw_power = Math.constrain(throw_power + 0.1, 33, 100)
             } else if (controller.down.isPressed() && !(controller.up.isPressed())) {
-                throw_power = Math.constrain(throw_power - 0.1, 10, 100)
+                throw_power = Math.constrain(throw_power - 0.1, 33, 100)
             }
             if (controller.left.isPressed() && !(controller.right.isPressed())) {
                 throw_angle += spriteutils.consts(spriteutils.Consts.Pi) / 180
@@ -229,6 +268,7 @@ function throw_pallino () {
         local_current_balls_state = get_balls_states(sprites.allOfKind(SpriteKind.Player))
         apply_ball_throw_to_state(0, 50, sprites.readDataNumber(sprite_pallino, "ball_id"), local_current_balls_state)
         set_balls_states(sprites.allOfKind(SpriteKind.Player), local_current_balls_state)
+        scene.cameraFollowSprite(sprite_pallino)
         pause(100)
         while (!(are_all_balls_stopped(global_ball_state))) {
             pause(100)
@@ -248,6 +288,14 @@ function are_all_balls_stopped (state: number[][]) {
         }
     }
     return true
+}
+function get_next_unthrown_ball (balls: any[]) {
+    for (let local_ball5 of balls) {
+        if (!(sprites.readDataBoolean(local_ball5, "ball_thrown"))) {
+            return local_ball5
+        }
+    }
+    return spriteutils.nullConsts(spriteutils.NullConsts.Null)
 }
 function these_sprites_are_overlapping (sprites2: any[]) {
     for (let index3 = 0; index3 <= sprites2.length - 1; index3++) {
@@ -342,9 +390,43 @@ function balls_physics_tick_do_collisions (state: number[][], dt: number) {
         }
     }
 }
+function get_closest_ball_to_target (balls: Sprite[], target: Sprite) {
+    local_closest_dist = 10000000000000000
+    local_closest_ball = balls[0]
+    for (let local_ball6 of balls) {
+        if (spriteutils.distanceBetween(target, local_ball6) < local_closest_dist) {
+            local_closest_dist = spriteutils.distanceBetween(sprite_pallino, local_ball6)
+            local_closest_ball = local_ball6
+        }
+    }
+    return local_closest_ball
+}
+function count_points () {
+    local_points = 1
+    local_ball_list = arrays.copy(arrays.toConcated(sprites_red_balls, sprites_green_balls))
+    local_closest_ball3 = get_closest_ball_to_target(local_ball_list, sprite_pallino)
+    local_scoring_team = sprites.readDataString(local_closest_ball3, "ball_type")
+    local_ball_list.removeAt(local_ball_list.indexOf(local_closest_ball3))
+    while (true) {
+        local_closest_ball3 = get_closest_ball_to_target(local_ball_list, sprite_pallino)
+        if (sprites.readDataString(local_closest_ball3, "ball_type") != local_scoring_team) {
+            break;
+        } else {
+            local_ball_list.removeAt(local_ball_list.indexOf(local_closest_ball3))
+            local_points += 1
+        }
+    }
+    return [local_scoring_team, text.stringify(local_points)]
+}
 function xy_to_loc (x: number, y: number) {
     return tiles.getTileLocation(Math.floor(x / 16), Math.floor(y / 16))
 }
+let local_scoring_team = ""
+let local_closest_ball3: Sprite = null
+let local_ball_list: any[] = []
+let local_points = 0
+let local_closest_ball: Sprite = null
+let local_closest_dist = 0
 let local_dot = 0
 let local_M = 0
 let local_overlap = 0
@@ -369,10 +451,12 @@ let global_ball_state: number[][] = []
 let local_current_balls_state: number[][] = []
 let local_delta_v = 0
 let local_speed = 0
+let sprite_pallino: Sprite = null
+let local_closest_ball2: Sprite = null
+let sprite_pallino_start_spot: Sprite = null
+let local_out_team = ""
 let sprites_green_balls: Sprite[] = []
 let sprites_red_balls: Sprite[] = []
-let sprite_pallino: Sprite = null
-let sprite_pallino_start_spot: Sprite = null
 let DEBUG = false
 DEBUG = false
 timer.background(function () {
@@ -381,6 +465,20 @@ timer.background(function () {
     hide_other_balls()
     throw_pallino()
     place_other_balls_wrt_pallino()
+    throw_ball(get_next_unthrown_ball(sprites_red_balls))
+    throw_ball(get_next_unthrown_ball(sprites_green_balls))
+    while (true) {
+        local_out_team = get_out_team()
+        if (local_out_team == "red") {
+            throw_ball(get_next_unthrown_ball(sprites_red_balls))
+        } else if (local_out_team == "green") {
+            throw_ball(get_next_unthrown_ball(sprites_green_balls))
+        } else {
+            break;
+        }
+        pause(0)
+    }
+    game.splash(count_points())
 })
 game.onUpdate(function () {
     global_ball_state = get_balls_states(sprites.allOfKind(SpriteKind.Player))
