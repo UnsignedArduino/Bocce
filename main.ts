@@ -10,21 +10,21 @@ function throw_ball (ball: Sprite) {
     )
     throw_ball_ui_and_wait_for_stop(ball)
 }
-function get_out_team () {
-    if (get_next_unthrown_ball(sprites_red_balls) == spriteutils.nullConsts(spriteutils.NullConsts.Null)) {
-        if (get_next_unthrown_ball(sprites_green_balls) == spriteutils.nullConsts(spriteutils.NullConsts.Null)) {
+function get_out_team (states: any[]) {
+    if (get_next_unthrown_ball(states, 1).length == 0) {
+        if (get_next_unthrown_ball(states, 2).length == 0) {
             return -1
         } else {
             return 2
         }
     }
-    if (get_next_unthrown_ball(sprites_green_balls) == spriteutils.nullConsts(spriteutils.NullConsts.Null)) {
+    if (get_next_unthrown_ball(states, 2).length == 0) {
         return 1
     }
-    local_closest_ball2 = get_closest_ball_to_target(arrays.toConcated(sprites_red_balls, sprites_green_balls), sprite_pallino)
-    if (sprites.readDataNumber(local_closest_ball2, "ball_type") == 1) {
+    local_closest_ball2 = get_closest_ball_to_target(states, 0)
+    if (local_closest_ball2[7] == 1) {
         return 2
-    } else if (sprites.readDataNumber(local_closest_ball2, "ball_type") == 2) {
+    } else if (local_closest_ball2[7] == 2) {
         return 1
     }
     return -1
@@ -107,6 +107,14 @@ function throw_ball_ui_and_wait_for_stop (ball: Sprite) {
 }
 function dist_between_balls (b1: number[], b2: number[]) {
     return Math.sqrt((b1[1] - b2[1]) ** 2 + (b1[2] - b2[2]) ** 2)
+}
+function get_ball_sprite_from_id (sprites2: any[], ball_id: number) {
+    for (let local_ball8 of sprites2) {
+        if (sprites.readDataNumber(local_ball8, "ball_id") == ball_id) {
+            return local_ball8
+        }
+    }
+    return spriteutils.nullConsts(spriteutils.NullConsts.Null)
 }
 function hide_other_balls () {
     for (let local_ball of sprites_red_balls) {
@@ -199,10 +207,23 @@ function init_balls () {
         sprites.setDataNumber(local_ball2, "ball_vy", 0)
         sprites.setDataNumber(local_ball2, "ball_mass", 3)
         sprites.setDataNumber(local_ball2, "ball_radius", 5)
-        sprites.setDataBoolean(local_ball2, "ball_thrown", false)
+        sprites.setDataNumber(local_ball2, "ball_thrown", 0)
     }
     sprites.setDataNumber(sprite_pallino, "ball_mass", 1)
     sprites.setDataNumber(sprite_pallino, "ball_radius", 3)
+}
+function get_ball_from_id (states: number[][], ball_id: number) {
+    states.push([0, 1])
+    states.pop()
+    for (let local_ball9 of states) {
+        if (local_ball9[0] == ball_id) {
+            return local_ball9
+        }
+    }
+    return []
+}
+function ai_score_state_wrt_ball (states: any[], ball_id: number) {
+    return 0
 }
 function tile_at_ball_is_one_of_these (ball: number[], tile_images: any[]) {
     for (let local_tile_image of tile_images) {
@@ -211,6 +232,9 @@ function tile_at_ball_is_one_of_these (ball: number[], tile_images: any[]) {
         }
     }
     return false
+}
+function ai_get_move (ball_id: number, states: any[]) {
+    return [0, 1]
 }
 function get_balls_states (balls: any[]) {
     local_states = []
@@ -223,7 +247,8 @@ function get_balls_states (balls: any[]) {
         sprites.readDataNumber(local_ball, "ball_vy"),
         sprites.readDataNumber(local_ball, "ball_mass"),
         sprites.readDataNumber(local_ball, "ball_radius"),
-        sprites.readDataNumber(local_ball, "ball_type")
+        sprites.readDataNumber(local_ball, "ball_type"),
+        sprites.readDataNumber(local_ball, "ball_thrown")
         ]
         local_states.push(local_state)
     }
@@ -356,9 +381,6 @@ function copy_balls_state (state: number[][]) {
     }
     return local_states2
 }
-function get_ai_move (ball_id: number, states: any[]) {
-    return [0, 1]
-}
 function are_all_balls_stopped (state: number[][]) {
     state.push([0, 1])
     state.pop()
@@ -370,13 +392,15 @@ function are_all_balls_stopped (state: number[][]) {
     }
     return true
 }
-function get_next_unthrown_ball (balls: any[]) {
-    for (let local_ball5 of balls) {
-        if (!(sprites.readDataBoolean(local_ball5, "ball_thrown"))) {
+function get_next_unthrown_ball (states: number[][], ball_type: number) {
+    states.push([0, 1])
+    states.pop()
+    for (let local_ball5 of states) {
+        if (local_ball5[7] == ball_type && local_ball5[8] == 0) {
             return local_ball5
         }
     }
-    return spriteutils.nullConsts(spriteutils.NullConsts.Null)
+    return []
 }
 function ai_throw_ball (ball: Sprite) {
     spriteutils.placeAngleFrom(
@@ -449,6 +473,7 @@ function set_balls_states (balls: any[], new_states: number[][]) {
                 sprites.setDataNumber(local_ball3, "ball_mass", local_state2[5])
                 sprites.setDataNumber(local_ball3, "ball_radius", local_state2[6])
                 sprites.setDataNumber(local_ball3, "ball_type", local_state2[7])
+                sprites.setDataNumber(local_ball3, "ball_thrown", local_state2[8])
                 break;
             }
         }
@@ -481,20 +506,26 @@ function balls_physics_tick_do_collisions (state: number[][], dt: number) {
         }
     }
 }
-function get_closest_ball_to_target (balls: Sprite[], target: Sprite) {
+function get_closest_ball_to_target (balls_states: number[][], target_id: number) {
+    balls_states.push([0, 1])
+    balls_states.pop()
     local_closest_dist = 10000000000000000
-    local_closest_ball = balls[0]
-    for (let local_ball6 of balls) {
-        if (spriteutils.distanceBetween(target, local_ball6) < local_closest_dist) {
-            local_closest_dist = spriteutils.distanceBetween(sprite_pallino, local_ball6)
-            local_closest_ball = local_ball6
+    local_closest_ball4 = []
+    local_target_ball = get_ball_from_id(balls_states, target_id)
+    for (let local_ball6 of balls_states) {
+        if (local_ball6[0] == target_id) {
+            continue;
+        }
+        if (dist_between_balls(local_ball6, local_target_ball) < local_closest_dist) {
+            local_closest_dist = dist_between_balls(local_ball6, local_target_ball)
+            local_closest_ball4 = local_ball6
         }
     }
-    return local_closest_ball
+    return local_closest_ball4
 }
 function throw_ball_ai_and_wait_for_stop (ball: Sprite) {
     local_current_balls_state = get_balls_states(sprites.allOfKind(SpriteKind.Player))
-    local_move = get_ai_move(sprites.readDataNumber(ball, "ball_id"), local_current_balls_state)
+    local_move = ai_get_move(sprites.readDataNumber(ball, "ball_id"), local_current_balls_state)
     apply_ball_throw_to_state(local_move[0], local_move[1], sprites.readDataNumber(ball, "ball_id"), local_current_balls_state)
     set_balls_states(sprites.allOfKind(SpriteKind.Player), local_current_balls_state)
     scene.cameraFollowSprite(ball)
@@ -504,15 +535,17 @@ function throw_ball_ai_and_wait_for_stop (ball: Sprite) {
     }
     sprites.setDataBoolean(ball, "ball_thrown", true)
 }
-function count_points () {
+function bocce_points (states: number[][]) {
+    states.push([0, 1])
+    states.pop()
     local_points = 1
-    local_ball_list = arrays.copy(arrays.toConcated(sprites_red_balls, sprites_green_balls))
-    local_closest_ball3 = get_closest_ball_to_target(local_ball_list, sprite_pallino)
-    local_scoring_team = sprites.readDataNumber(local_closest_ball3, "ball_type")
+    local_ball_list = arrays.copy(states)
+    local_closest_ball3 = get_closest_ball_to_target(local_ball_list, 0)
+    local_scoring_team = local_closest_ball3[7]
     local_ball_list.removeAt(local_ball_list.indexOf(local_closest_ball3))
     while (true) {
-        local_closest_ball3 = get_closest_ball_to_target(local_ball_list, sprite_pallino)
-        if (sprites.readDataNumber(local_closest_ball3, "ball_type") != local_scoring_team) {
+        local_closest_ball3 = get_closest_ball_to_target(local_ball_list, 0)
+        if (local_closest_ball3[7] != local_scoring_team) {
             break;
         } else {
             local_ball_list.removeAt(local_ball_list.indexOf(local_closest_ball3))
@@ -526,11 +559,12 @@ function xy_to_loc (x: number, y: number) {
 }
 let local_state_copy: number[][] = []
 let local_scoring_team = 0
-let local_closest_ball3: Sprite = null
+let local_closest_ball3: number[] = []
 let local_ball_list: any[] = []
 let local_points = 0
 let local_move: number[] = []
-let local_closest_ball: Sprite = null
+let local_target_ball: number[] = []
+let local_closest_ball4: number[] = []
 let local_closest_dist = 0
 let local_dot = 0
 let local_M = 0
@@ -556,12 +590,13 @@ let global_ball_state: number[][] = []
 let local_current_balls_state: number[][] = []
 let local_delta_v = 0
 let local_speed = 0
-let flag_bail_ball_sim = false
-let local_closest_ball2: Sprite = null
-let sprite_pallino_start_spot: Sprite = null
-let local_out_team = 0
 let sprites_green_balls: Sprite[] = []
 let sprites_red_balls: Sprite[] = []
+let flag_bail_ball_sim = false
+let local_closest_ball2: number[] = []
+let sprite_pallino_start_spot: Sprite = null
+let local_out_team = 0
+let test: undefined = null
 let sprite_pallino: Sprite = null
 let ghost_balls_to_render: number[][] = []
 stats.turnStats(true)
@@ -576,25 +611,26 @@ timer.background(function () {
     hide_other_balls()
     record_pallino_start_spot()
     if (DEBUG) {
-        DEBUG_throw_ball_ui_and_wait_for_stop(sprite_pallino, randint(0, 628318) / 100000, randint(33, 100))
+        DEBUG_throw_ball_ui_and_wait_for_stop(sprite_pallino, randint(0, 628318) / 100000, randint(33, 50))
     } else {
         throw_ball_ui_and_wait_for_stop(sprite_pallino)
     }
     place_other_balls_wrt_pallino_start_spot()
-    throw_ball(get_next_unthrown_ball(sprites_red_balls))
-    throw_ball(get_next_unthrown_ball(sprites_green_balls))
+    test = get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 1)[0])
+    throw_ball(test)
+    throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 2)[0]))
     while (true) {
-        local_out_team = get_out_team()
+        local_out_team = get_out_team(get_balls_states(sprites.allOfKind(SpriteKind.Player)))
         if (local_out_team == 1) {
-            throw_ball(get_next_unthrown_ball(sprites_red_balls))
+            throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 1)[0]))
         } else if (local_out_team == 2) {
-            throw_ball(get_next_unthrown_ball(sprites_green_balls))
+            throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 2)[0]))
         } else {
             break;
         }
         pause(0)
     }
-    game.splash(count_points())
+    game.splash(bocce_points(get_balls_states(sprites.allOfKind(SpriteKind.Player))))
 })
 game.onUpdate(function () {
     global_ball_state = get_balls_states(sprites.allOfKind(SpriteKind.Player))
