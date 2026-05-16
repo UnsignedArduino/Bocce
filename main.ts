@@ -1,6 +1,36 @@
 namespace SpriteKind {
     export const Math = SpriteKind.create()
 }
+function bocce_points_red_pos_green_neg (states: number[][]) {
+    states.push([0, 1])
+    states.pop()
+    local_points = 0
+    local_ball_list = arrays.copy(states)
+    local_ordered_ball_list = [[0, 1]]
+    local_ordered_ball_list.pop()
+    for (let index = 0; index < local_ball_list.length - 1; index++) {
+        local_closest_ball3 = get_closest_ball_to_target(local_ball_list, 0)
+        local_scoring_team = local_closest_ball3[7]
+        local_ball_list.removeAt(local_ball_list.indexOf(local_closest_ball3))
+        local_ordered_ball_list.push(local_closest_ball3)
+    }
+    local_scoring_team = local_ordered_ball_list[0][7]
+    for (let index6 = 0; index6 <= local_ordered_ball_list.length - 1; index6++) {
+        if (local_ordered_ball_list[index6][8] == 0) {
+            continue;
+        }
+        if (local_ordered_ball_list[index6][7] == local_scoring_team) {
+            local_points += 1
+        } else {
+            break;
+        }
+    }
+    if (local_scoring_team == 1) {
+        return local_points
+    } else {
+        return local_points * -1
+    }
+}
 function throw_ball (ball: Sprite) {
     spriteutils.placeAngleFrom(
     ball,
@@ -34,7 +64,6 @@ function balls_physics_simulate_throw_until_all_stop (state: number[][]) {
     state.pop()
     while (!(are_all_balls_stopped(state))) {
         if (flag_bail_ball_sim) {
-            flag_bail_ball_sim = false
             return
         }
         for (let index = 0; index < 4; index++) {
@@ -42,7 +71,6 @@ function balls_physics_simulate_throw_until_all_stop (state: number[][]) {
         }
         pause(0)
     }
-    pause(100)
 }
 function place_other_balls_wrt_pallino_start_spot () {
     spriteutils.placeAngleFrom(
@@ -77,6 +105,7 @@ function place_other_balls_wrt_pallino_start_spot () {
     32,
     sprite_pallino_start_spot
     )
+    sprites.destroy(sprite_pallino_start_spot)
 }
 function balls_physics_tick_do_accelerations (state: number[][], dt: number) {
     state.push([0, 1])
@@ -103,7 +132,7 @@ function throw_ball_ui_and_wait_for_stop (ball: Sprite) {
     while (!(are_all_balls_stopped(global_ball_state))) {
         pause(100)
     }
-    sprites.setDataBoolean(ball, "ball_thrown", true)
+    sprites.setDataNumber(ball, "ball_thrown", 1)
 }
 function dist_between_balls (b1: number[], b2: number[]) {
     return Math.sqrt((b1[1] - b2[1]) ** 2 + (b1[2] - b2[2]) ** 2)
@@ -182,7 +211,6 @@ function init_balls () {
         local_next_ball_id += 1
         sprites.setDataNumber(local_sprite_ball, "ball_type", 1)
         sprites_red_balls.push(local_sprite_ball)
-        local_next_ball_id += 1
     }
     sprites_green_balls = []
     for (let index = 0; index < 4; index++) {
@@ -222,8 +250,14 @@ function get_ball_from_id (states: number[][], ball_id: number) {
     }
     return []
 }
-function ai_score_state_wrt_ball (states: any[], ball_id: number) {
-    return 0
+function ai_score_state_wrt_ball (states: number[][], ball_id: number) {
+    states.push([0, 1])
+    states.pop()
+    local_scoring_ball = get_ball_from_id(states, ball_id)
+    local_pallino = get_ball_from_id(states, 1)
+    local_scoring_team2 = local_scoring_ball[7]
+    local_points_for_red = 0
+    return bocce_points_red_pos_green_neg(states)
 }
 function tile_at_ball_is_one_of_these (ball: number[], tile_images: any[]) {
     for (let local_tile_image of tile_images) {
@@ -239,18 +273,20 @@ function ai_get_move (ball_id: number, states: any[]) {
 function get_balls_states (balls: any[]) {
     local_states = []
     for (let local_ball of balls) {
-        local_state = [
-        sprites.readDataNumber(local_ball, "ball_id"),
-        local_ball.x,
-        local_ball.y,
-        sprites.readDataNumber(local_ball, "ball_vx"),
-        sprites.readDataNumber(local_ball, "ball_vy"),
-        sprites.readDataNumber(local_ball, "ball_mass"),
-        sprites.readDataNumber(local_ball, "ball_radius"),
-        sprites.readDataNumber(local_ball, "ball_type"),
-        sprites.readDataNumber(local_ball, "ball_thrown")
-        ]
-        local_states.push(local_state)
+        if (sprites.readDataNumber(local_ball, "ball_id") >= 0) {
+            local_state = [
+            sprites.readDataNumber(local_ball, "ball_id"),
+            local_ball.x,
+            local_ball.y,
+            sprites.readDataNumber(local_ball, "ball_vx"),
+            sprites.readDataNumber(local_ball, "ball_vy"),
+            sprites.readDataNumber(local_ball, "ball_mass"),
+            sprites.readDataNumber(local_ball, "ball_radius"),
+            sprites.readDataNumber(local_ball, "ball_type"),
+            sprites.readDataNumber(local_ball, "ball_thrown")
+            ]
+            local_states.push(local_state)
+        }
     }
     return local_states
 }
@@ -263,7 +299,7 @@ function DEBUG_throw_ball_ui_and_wait_for_stop (ball: Sprite, angle: number, pow
     while (!(are_all_balls_stopped(global_ball_state))) {
         pause(100)
     }
-    sprites.setDataBoolean(ball, "ball_thrown", true)
+    sprites.setDataNumber(ball, "ball_thrown", 1)
 }
 spriteutils.createRenderable(0.9, function (screen2) {
     for (let local_ball7 of ghost_balls_to_render) {
@@ -439,6 +475,7 @@ function apply_ball_throw_to_state (angle: number, power2: number, ball_id: numb
     }
     local_state6[3] = power2 * Math.cos(angle * -1)
     local_state6[4] = power2 * Math.sin(angle * -1)
+    local_state6[8] = 1
 }
 function brute_force_scatter_balls_around_point (balls: Sprite[], math_sprite: Sprite, try_radius: number) {
     balls.push(sprites.create(img`
@@ -533,35 +570,12 @@ function throw_ball_ai_and_wait_for_stop (ball: Sprite) {
     while (!(are_all_balls_stopped(global_ball_state))) {
         pause(100)
     }
-    sprites.setDataBoolean(ball, "ball_thrown", true)
-}
-function bocce_points (states: number[][]) {
-    states.push([0, 1])
-    states.pop()
-    local_points = 1
-    local_ball_list = arrays.copy(states)
-    local_closest_ball3 = get_closest_ball_to_target(local_ball_list, 0)
-    local_scoring_team = local_closest_ball3[7]
-    local_ball_list.removeAt(local_ball_list.indexOf(local_closest_ball3))
-    while (true) {
-        local_closest_ball3 = get_closest_ball_to_target(local_ball_list, 0)
-        if (local_closest_ball3[7] != local_scoring_team) {
-            break;
-        } else {
-            local_ball_list.removeAt(local_ball_list.indexOf(local_closest_ball3))
-            local_points += 1
-        }
-    }
-    return [local_scoring_team, local_points]
+    sprites.setDataNumber(ball, "ball_thrown", 1)
 }
 function xy_to_loc (x: number, y: number) {
     return tiles.getTileLocation(Math.floor(x / tiles.tileWidth()), Math.floor(y / tiles.tileWidth()))
 }
 let local_state_copy: number[][] = []
-let local_scoring_team = 0
-let local_closest_ball3: number[] = []
-let local_ball_list: any[] = []
-let local_points = 0
 let local_move: number[] = []
 let local_target_ball: number[] = []
 let local_closest_ball4: number[] = []
@@ -584,6 +598,10 @@ let throw_angle = 0
 let ball_to_draw_throw_ui_around: Sprite = null
 let local_state: number[] = []
 let local_states: number[][] = []
+let local_points_for_red = 0
+let local_scoring_team2 = 0
+let local_pallino: number[] = []
+let local_scoring_ball: number[] = []
 let local_sprite_ball: Sprite = null
 let local_next_ball_id = 0
 let global_ball_state: number[][] = []
@@ -595,13 +613,17 @@ let sprites_red_balls: Sprite[] = []
 let flag_bail_ball_sim = false
 let local_closest_ball2: number[] = []
 let sprite_pallino_start_spot: Sprite = null
+let local_scoring_team = 0
+let local_closest_ball3: number[] = []
+let local_ordered_ball_list: number[][] = []
+let local_ball_list: any[] = []
+let local_points = 0
 let local_out_team = 0
-let test: undefined = null
 let sprite_pallino: Sprite = null
 let ghost_balls_to_render: number[][] = []
 stats.turnStats(true)
 let DEBUG = true
-let SHOW_BALL_THROW_UI_SIMULATION = false
+let SHOW_BALL_THROW_UI_SIMULATION = true
 ghost_balls_to_render = [[0, 1]]
 ghost_balls_to_render.pop()
 timer.background(function () {
@@ -616,8 +638,7 @@ timer.background(function () {
         throw_ball_ui_and_wait_for_stop(sprite_pallino)
     }
     place_other_balls_wrt_pallino_start_spot()
-    test = get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 1)[0])
-    throw_ball(test)
+    throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 1)[0]))
     throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 2)[0]))
     while (true) {
         local_out_team = get_out_team(get_balls_states(sprites.allOfKind(SpriteKind.Player)))
@@ -630,7 +651,7 @@ timer.background(function () {
         }
         pause(0)
     }
-    game.splash(bocce_points(get_balls_states(sprites.allOfKind(SpriteKind.Player))))
+    game.splash(bocce_points_red_pos_green_neg(get_balls_states(sprites.allOfKind(SpriteKind.Player))))
 })
 game.onUpdate(function () {
     global_ball_state = get_balls_states(sprites.allOfKind(SpriteKind.Player))
@@ -640,12 +661,21 @@ game.onUpdate(function () {
     set_balls_states(sprites.allOfKind(SpriteKind.Player), global_ball_state)
 })
 forever(function () {
-    if (SHOW_BALL_THROW_UI_SIMULATION && ball_to_draw_throw_ui_around != spriteutils.nullConsts(spriteutils.NullConsts.Null)) {
-        local_state_copy = get_balls_states(sprites.allOfKind(SpriteKind.Player))
-        apply_ball_throw_to_state(throw_angle, throw_power, sprites.readDataNumber(ball_to_draw_throw_ui_around, "ball_id"), local_state_copy)
-        ghost_balls_to_render = local_state_copy
-        balls_physics_simulate_throw_until_all_stop(local_state_copy)
-    } else {
-        ghost_balls_to_render = []
+    if (SHOW_BALL_THROW_UI_SIMULATION) {
+        if (ball_to_draw_throw_ui_around != spriteutils.nullConsts(spriteutils.NullConsts.Null)) {
+            local_state_copy = get_balls_states(sprites.allOfKind(SpriteKind.Player))
+            apply_ball_throw_to_state(throw_angle, throw_power, sprites.readDataNumber(ball_to_draw_throw_ui_around, "ball_id"), local_state_copy)
+            ghost_balls_to_render = local_state_copy
+            balls_physics_simulate_throw_until_all_stop(local_state_copy)
+            if (flag_bail_ball_sim) {
+                flag_bail_ball_sim = false
+                info.setScore(0)
+            } else {
+                info.setScore(ai_score_state_wrt_ball(local_state_copy, sprites.readDataNumber(ball_to_draw_throw_ui_around, "ball_id")))
+                pause(100)
+            }
+        } else {
+            ghost_balls_to_render = []
+        }
     }
 })
