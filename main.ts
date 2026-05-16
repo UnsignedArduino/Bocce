@@ -479,17 +479,18 @@ let global_ball_state: number[][] = []
 let local_current_balls_state: number[][] = []
 let local_delta_v = 0
 let local_speed = 0
-let sprite_pallino: Sprite = null
 let local_closest_ball2: Sprite = null
 let sprite_pallino_start_spot: Sprite = null
 let local_out_team = ""
 let sprites_green_balls: Sprite[] = []
 let sprites_red_balls: Sprite[] = []
+let sprite_pallino: Sprite = null
 let DEBUG = false
 DEBUG = false
 timer.background(function () {
     tiles.loadMap(tiles.createSmallMap(tilemap`level2`))
     init_balls()
+    tiles.placeOnTile(sprite_pallino, tiles.getTileLocation(50, 35))
     hide_other_balls()
     throw_pallino()
     place_other_balls_wrt_pallino()
