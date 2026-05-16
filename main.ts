@@ -189,6 +189,20 @@ function init_balls () {
     sprites.setDataNumber(sprite_pallino, "ball_mass", 1)
     sprites.setDataNumber(sprite_pallino, "ball_radius", 3)
 }
+function balls_physics_tick_until_all_stop (state: number[][]) {
+    state.push([0, 1])
+    state.pop()
+    if (SHOW_BALL_THROW_UI_SIMULATION || false) {
+        ghost_balls_to_render = state
+    }
+    while (!(are_all_balls_stopped(state))) {
+        balls_physics_tick(state, 1 / 120)
+        if (SHOW_BALL_THROW_UI_SIMULATION || false) {
+            pause(0)
+        }
+    }
+    return state
+}
 function tile_at_ball_is_one_of_these (ball: number[], tile_images: any[]) {
     for (let local_tile_image of tile_images) {
         if (tiles.tileAtLocationEquals(xy_to_loc(ball[1], ball[2]), local_tile_image)) {
@@ -225,6 +239,35 @@ function DEBUG_throw_ball_ui_and_wait_for_stop (ball: Sprite, angle: number, pow
     }
     sprites.setDataBoolean(ball, "ball_thrown", true)
 }
+spriteutils.createRenderable(0.9, function (screen2) {
+    for (let local_ball7 of ghost_balls_to_render) {
+        if (local_ball7[7] == 0) {
+            spriteutils.fillCircle(
+            screen2,
+            local_ball7[1] - scene.cameraProperty(CameraProperty.Left),
+            local_ball7[2] - scene.cameraProperty(CameraProperty.Top),
+            local_ball7[6],
+            11
+            )
+        } else if (local_ball7[7] == 1) {
+            spriteutils.fillCircle(
+            screen2,
+            local_ball7[1] - scene.cameraProperty(CameraProperty.Left),
+            local_ball7[2] - scene.cameraProperty(CameraProperty.Top),
+            local_ball7[6],
+            4
+            )
+        } else if (local_ball7[7] == 2) {
+            spriteutils.fillCircle(
+            screen2,
+            local_ball7[1] - scene.cameraProperty(CameraProperty.Left),
+            local_ball7[2] - scene.cameraProperty(CameraProperty.Top),
+            local_ball7[6],
+            6
+            )
+        }
+    }
+})
 function balls_physics_tick (state: number[][], dt: number) {
     // Adding and removing a number array from state will force the compiler to realize that state is number[][]
     state.push([0, 1])
@@ -271,9 +314,9 @@ function throw_ball_ui (ball: Sprite, states: any[]) {
         } else {
             scene.cameraFollowSprite(ball)
             if (controller.up.isPressed() && !(controller.down.isPressed())) {
-                throw_power = Math.constrain(throw_power + 0.1, 33, 100)
+                throw_power = Math.constrain(throw_power + 0.5, 33, 100)
             } else if (controller.down.isPressed() && !(controller.up.isPressed())) {
-                throw_power = Math.constrain(throw_power - 0.1, 33, 100)
+                throw_power = Math.constrain(throw_power - 0.5, 33, 100)
             }
             if (controller.left.isPressed() && !(controller.right.isPressed())) {
                 throw_angle += spriteutils.consts(spriteutils.Consts.Pi) / 180
@@ -476,6 +519,7 @@ function count_points () {
 function xy_to_loc (x: number, y: number) {
     return tiles.getTileLocation(Math.floor(x / tiles.tileWidth()), Math.floor(y / tiles.tileWidth()))
 }
+let local_state_copy: number[][] = []
 let local_scoring_team = 0
 let local_closest_ball3: Sprite = null
 let local_ball_list: any[] = []
@@ -508,30 +552,41 @@ let local_current_balls_state: number[][] = []
 let local_delta_v = 0
 let local_speed = 0
 let local_closest_ball2: Sprite = null
-let sprite_pallino_start_spot: Sprite = null
 let local_out_team = 0
 let sprites_green_balls: Sprite[] = []
+let sprite_pallino_start_spot: Sprite = null
 let sprites_red_balls: Sprite[] = []
 let sprite_pallino: Sprite = null
-let DEBUG = true
+let ghost_balls_to_render: number[][] = []
+let SHOW_BALL_THROW_UI_SIMULATION = false
+stats.turnStats(true)
+let DEBUG = false
+SHOW_BALL_THROW_UI_SIMULATION = false
+ghost_balls_to_render = [[0, 1]]
+ghost_balls_to_render.pop()
 timer.background(function () {
     tiles.loadMap(tiles.createSmallMap(tilemap`level2`))
     init_balls()
     tiles.placeOnTile(sprite_pallino, tiles.getTileLocation(50, 35))
     hide_other_balls()
     record_pallino_start_spot()
-    if (DEBUG) {
+    if (false) {
         DEBUG_throw_ball_ui_and_wait_for_stop(sprite_pallino, randint(0, 628318) / 100000, randint(33, 100))
     } else {
         throw_ball_ui_and_wait_for_stop(sprite_pallino)
     }
     place_other_balls_wrt_pallino_start_spot()
-    if (DEBUG) {
-    	
+    if (false) {
+        spriteutils.placeAngleFrom(
+        get_next_unthrown_ball(sprites_red_balls),
+        0,
+        0,
+        sprite_pallino_start_spot
+        )
+        DEBUG_throw_ball_ui_and_wait_for_stop(get_next_unthrown_ball(sprites_red_balls), 0, 50)
     } else {
-    	
+        throw_ball(get_next_unthrown_ball(sprites_red_balls))
     }
-    throw_ball(get_next_unthrown_ball(sprites_red_balls))
     throw_ball(get_next_unthrown_ball(sprites_green_balls))
     while (true) {
         local_out_team = get_out_team()
@@ -552,4 +607,11 @@ game.onUpdate(function () {
         balls_physics_tick(global_ball_state, 1 / 30 / 4)
     }
     set_balls_states(sprites.allOfKind(SpriteKind.Player), global_ball_state)
+})
+forever(function () {
+    if (SHOW_BALL_THROW_UI_SIMULATION && ball_to_draw_throw_ui_around != spriteutils.nullConsts(spriteutils.NullConsts.Null)) {
+        local_state_copy = get_balls_states(sprites.allOfKind(SpriteKind.Player))
+        apply_ball_throw_to_state(throw_angle, throw_power, sprites.readDataNumber(ball_to_draw_throw_ui_around, "ball_id"), local_state_copy)
+        ghost_balls_to_render = balls_physics_tick_until_all_stop(local_state_copy)
+    }
 })
