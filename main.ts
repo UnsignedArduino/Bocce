@@ -250,14 +250,22 @@ function get_ball_from_id (states: number[][], ball_id: number) {
     }
     return []
 }
-function ai_score_state_wrt_ball (states: number[][], ball_id: number) {
+function ai_score_state_wrt_ball (states: number[][]) {
     states.push([0, 1])
     states.pop()
-    local_scoring_ball = get_ball_from_id(states, ball_id)
-    local_pallino = get_ball_from_id(states, 1)
-    local_scoring_team2 = local_scoring_ball[7]
-    local_points_for_red = 0
-    return bocce_points_red_pos_green_neg(states)
+    local_pallino = get_ball_from_id(states, 0)
+    local_score = bocce_points_red_pos_green_neg(states) * 1000
+    for (let local_ball10 of states) {
+        if (local_ball10[7] == 0 || local_ball10[8] == 0) {
+            continue;
+        }
+        if (local_ball10[7] == 1) {
+            local_score += 100 / (dist_between_balls(local_ball10, local_pallino) / 16)
+        } else {
+            local_score += -100 / (dist_between_balls(local_ball10, local_pallino) / 16)
+        }
+    }
+    return local_score
 }
 function tile_at_ball_is_one_of_these (ball: number[], tile_images: any[]) {
     for (let local_tile_image of tile_images) {
@@ -598,10 +606,8 @@ let throw_angle = 0
 let ball_to_draw_throw_ui_around: Sprite = null
 let local_state: number[] = []
 let local_states: number[][] = []
-let local_points_for_red = 0
-let local_scoring_team2 = 0
+let local_score = 0
 let local_pallino: number[] = []
-let local_scoring_ball: number[] = []
 let local_sprite_ball: Sprite = null
 let local_next_ball_id = 0
 let global_ball_state: number[][] = []
@@ -623,7 +629,7 @@ let sprite_pallino: Sprite = null
 let ghost_balls_to_render: number[][] = []
 stats.turnStats(true)
 let DEBUG = true
-let SHOW_BALL_THROW_UI_SIMULATION = true
+let SHOW_BALL_THROW_UI_SIMULATION = false
 ghost_balls_to_render = [[0, 1]]
 ghost_balls_to_render.pop()
 timer.background(function () {
@@ -669,9 +675,7 @@ forever(function () {
             balls_physics_simulate_throw_until_all_stop(local_state_copy)
             if (flag_bail_ball_sim) {
                 flag_bail_ball_sim = false
-                info.setScore(0)
             } else {
-                info.setScore(ai_score_state_wrt_ball(local_state_copy, sprites.readDataNumber(ball_to_draw_throw_ui_around, "ball_id")))
                 pause(100)
             }
         } else {
