@@ -266,7 +266,11 @@ function ai_get_move (ball_id: number, states: any[]) {
     local_team = get_ball_from_id(states, ball_id)[7]
     local_best_angle = 0
     local_best_power = 0
-    local_best_score = 0
+    if (local_team == 1) {
+        local_best_score = -999999999999999
+    } else {
+        local_best_score = 999999999999999
+    }
     local_angles_to_try = [
     0 * spriteutils.consts(spriteutils.Consts.Pi),
     0.25 * spriteutils.consts(spriteutils.Consts.Pi),
@@ -678,13 +682,25 @@ timer.background(function () {
     } else {
         throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 1)[0]))
     }
-    throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 2)[0]))
+    if (true) {
+        ai_throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 2)[0]))
+    } else {
+        throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 2)[0]))
+    }
     while (true) {
         local_out_team = get_out_team(get_balls_states(sprites.allOfKind(SpriteKind.Player)))
         if (local_out_team == 1) {
-            throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 1)[0]))
+            if (true) {
+                ai_throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 1)[0]))
+            } else {
+                throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 1)[0]))
+            }
         } else if (local_out_team == 2) {
-            throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 2)[0]))
+            if (true) {
+                ai_throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 2)[0]))
+            } else {
+                throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 2)[0]))
+            }
         } else {
             break;
         }
