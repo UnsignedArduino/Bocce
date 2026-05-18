@@ -119,6 +119,9 @@ function num_range (from_num: number, to_num: number, step_num: number) {
     }
     return local_num_list
 }
+function num_between_inclusive (a: number, x: number, b: number) {
+    return x >= a && x <= b
+}
 function team_type_to_str (t: number) {
     if (t == 0) {
         return "human on P1 controls"
@@ -889,33 +892,33 @@ timer.background(function () {
     tiles.placeOnTile(sprite_pallino, tiles.getTileLocation(50, 35))
     hide_other_balls()
     record_pallino_start_spot()
-    if (false) {
+    if (num_between_inclusive(1, game_options_red_team_type, 3)) {
         DEBUG_throw_ball_ui_and_wait_for_stop(sprite_pallino, randint(0, 628318) / 100000, randint(33, 50))
     } else {
         throw_ball_ui_and_wait_for_stop(sprite_pallino)
     }
     place_other_balls_wrt_pallino_start_spot()
-    if (false) {
-        ai_throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 1)[0]), 3)
+    if (num_between_inclusive(1, game_options_red_team_type, 3)) {
+        ai_throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 1)[0]), game_options_red_team_type - 0)
     } else {
         throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 1)[0]))
     }
-    if (false) {
-        ai_throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 2)[0]), 3)
+    if (num_between_inclusive(1, game_options_green_team_type, 3)) {
+        ai_throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 2)[0]), game_options_green_team_type - 0)
     } else {
         throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 2)[0]))
     }
     while (true) {
         local_out_team = get_out_team(get_balls_states(sprites.allOfKind(SpriteKind.Player)))
         if (local_out_team == 1) {
-            if (false) {
-                ai_throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 1)[0]), 3)
+            if (num_between_inclusive(1, game_options_red_team_type, 3)) {
+                ai_throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 1)[0]), game_options_red_team_type - 0)
             } else {
                 throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 1)[0]))
             }
         } else if (local_out_team == 2) {
-            if (false) {
-                ai_throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 2)[0]), 3)
+            if (num_between_inclusive(1, game_options_green_team_type, 3)) {
+                ai_throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 2)[0]), game_options_green_team_type - 0)
             } else {
                 throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 2)[0]))
             }
