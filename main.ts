@@ -269,29 +269,29 @@ function tile_at_ball_is_one_of_these (ball: number[], tile_images: any[]) {
     }
     return false
 }
-function ai_get_move (ball_id: number, states: any[]) {
-    if (true) {
+function ai_get_move (ball_id: number, states: any[], effort: number) {
+    if (effort > 0) {
         local_angles_to_try = num_range(0, 1.75 * spriteutils.consts(spriteutils.Consts.Pi) + 0.001, 0.25 * spriteutils.consts(spriteutils.Consts.Pi))
         local_powers_to_try = [33]
         local_test_results = ai_test_these_angles_and_powers(local_angles_to_try, local_powers_to_try, ball_id, states)
         local_best_angle2 = local_test_results[0]
         local_best_power2 = local_test_results[1]
     }
-    if (true) {
+    if (effort > 0) {
         local_angles_to_try = num_range(local_best_angle2 - 0.25 * spriteutils.consts(spriteutils.Consts.Pi), local_best_angle2 + 0.25 * spriteutils.consts(spriteutils.Consts.Pi) + 0.001, 0.125 * spriteutils.consts(spriteutils.Consts.Pi))
         local_powers_to_try = num_range(33, 100, 33)
         local_test_results = ai_test_these_angles_and_powers(local_angles_to_try, local_powers_to_try, ball_id, states)
         local_best_angle2 = local_test_results[0]
         local_best_power2 = local_test_results[1]
     }
-    if (true) {
+    if (effort > 1) {
         local_angles_to_try = num_range(local_best_angle2 - 0.125 * spriteutils.consts(spriteutils.Consts.Pi), local_best_angle2 + 0.125 * spriteutils.consts(spriteutils.Consts.Pi) + 0.001, 0.0625 * spriteutils.consts(spriteutils.Consts.Pi))
         local_powers_to_try = num_range(33, 100, 16.5)
         local_test_results = ai_test_these_angles_and_powers(local_angles_to_try, local_powers_to_try, ball_id, states)
         local_best_angle2 = local_test_results[0]
         local_best_power2 = local_test_results[1]
     }
-    if (true) {
+    if (effort > 2) {
         local_angles_to_try = num_range(local_best_angle2 - 0.0625 * spriteutils.consts(spriteutils.Consts.Pi), local_best_angle2 + 0.0625 * spriteutils.consts(spriteutils.Consts.Pi) + 0.001, 0.03125 * spriteutils.consts(spriteutils.Consts.Pi))
         local_powers_to_try = num_range(33, 100, 8.25)
         local_test_results = ai_test_these_angles_and_powers(local_angles_to_try, local_powers_to_try, ball_id, states)
@@ -471,7 +471,7 @@ function ai_throw_ball (ball: Sprite) {
     0,
     sprite_pallino_start_spot
     )
-    throw_ball_ai_and_wait_for_stop(ball)
+    throw_ball_ai_and_wait_for_stop(ball, 3)
 }
 function these_sprites_are_overlapping (sprites2: any[]) {
     for (let index3 = 0; index3 <= sprites2.length - 1; index3++) {
@@ -515,7 +515,9 @@ function ai_test_these_angles_and_powers (angles: any[], powers: any[], ball_id:
     for (let local_this_angle of angles) {
         for (let local_this_power of powers) {
             local_this_state = copy_balls_state(states)
-            ghost_balls_to_render = local_this_state
+            if (SHOW_AI_SIMULATION) {
+                ghost_balls_to_render = local_this_state
+            }
             local_this_score = score_ball_throw_for_this_state(ball_id, local_this_angle, local_this_power, local_this_state)
             if (local_team == 1 && local_this_score > local_best_score || local_team == 2 && local_this_score < local_best_score) {
                 local_best_angle = local_this_angle
@@ -524,7 +526,9 @@ function ai_test_these_angles_and_powers (angles: any[], powers: any[], ball_id:
             }
         }
     }
-    ghost_balls_to_render = []
+    if (SHOW_AI_SIMULATION) {
+        ghost_balls_to_render = []
+    }
     return [local_best_angle, local_best_power]
 }
 function brute_force_scatter_balls_around_point (balls: Sprite[], math_sprite: Sprite, try_radius: number) {
@@ -622,10 +626,10 @@ function score_ball_throw_for_this_state (ball_id: number, angle: number, power2
     }
     return ai_score_state_red_pos_green_neg(states)
 }
-function throw_ball_ai_and_wait_for_stop (ball: Sprite) {
+function throw_ball_ai_and_wait_for_stop (ball: Sprite, effort: number) {
     scene.cameraFollowSprite(ball)
     local_current_balls_state = get_balls_states(sprites.allOfKind(SpriteKind.Player))
-    local_move = ai_get_move(sprites.readDataNumber(ball, "ball_id"), local_current_balls_state)
+    local_move = ai_get_move(sprites.readDataNumber(ball, "ball_id"), local_current_balls_state, effort)
     apply_ball_throw_to_state(local_move[0], local_move[1], sprites.readDataNumber(ball, "ball_id"), local_current_balls_state)
     set_balls_states(sprites.allOfKind(SpriteKind.Player), local_current_balls_state)
     pause(100)
@@ -692,9 +696,11 @@ let local_points = 0
 let local_out_team = 0
 let sprite_pallino: Sprite = null
 let ghost_balls_to_render: number[][] = []
+let SHOW_AI_SIMULATION = false
 stats.turnStats(true)
 let DEBUG = true
-let SHOW_BALL_THROW_UI_SIMULATION = false
+let SHOW_BALL_THROW_UI_SIMULATION = true
+SHOW_AI_SIMULATION = true
 ghost_balls_to_render = [[0, 1]]
 ghost_balls_to_render.pop()
 timer.background(function () {
