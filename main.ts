@@ -1,5 +1,6 @@
 namespace SpriteKind {
     export const Math = SpriteKind.create()
+    export const UI = SpriteKind.create()
 }
 function bocce_points_red_pos_green_neg (states: number[][]) {
     states.push([0, 1])
@@ -351,7 +352,9 @@ function menu_setup_green_team_selector () {
     miniMenu.createMenuItem("AI level 3")
     ])
     miniMenu.setTitle(menu_green_team_selector, "Set green team")
-    menu_green_team_selector.setPosition(scene.screenWidth() / 2, scene.screenHeight() / 2)
+    menu_green_team_selector.top = scene.screenHeight() * 0 + 4
+    menu_green_team_selector.left = scene.screenWidth() * 1 + 4
+    menu_green_team_selector.setFlag(SpriteFlag.RelativeToCamera, false)
     sprites.setDataNumber(menu_green_team_selector, "menu_option_selected", -1)
     miniMenu.onButtonPressed(menu_green_team_selector, miniMenu.Button.A, function (selection, selectedIndex) {
         sprites.setDataNumber(menu_green_team_selector, "menu_option_selected", selectedIndex)
@@ -375,7 +378,9 @@ function menu_setup_main_menu () {
     miniMenu.setStyleProperty(menu_main_menu, miniMenu.StyleKind.Selected, miniMenu.StyleProperty.Foreground, images.colorBlock(15))
     miniMenu.setStyleProperty(menu_main_menu, miniMenu.StyleKind.Title, miniMenu.StyleProperty.Background, images.colorBlock(15))
     miniMenu.setStyleProperty(menu_main_menu, miniMenu.StyleKind.Title, miniMenu.StyleProperty.Foreground, images.colorBlock(1))
-    menu_main_menu.setPosition(scene.screenWidth() / 2, scene.screenHeight() / 2)
+    menu_main_menu.top = scene.screenHeight() * 0 + 4
+    menu_main_menu.left = scene.screenWidth() * 1 + 4
+    menu_main_menu.setFlag(SpriteFlag.RelativeToCamera, false)
     sprites.setDataNumber(menu_main_menu, "menu_option_selected", -1)
     miniMenu.onButtonPressed(menu_main_menu, miniMenu.Button.A, function (selection, selectedIndex) {
         sprites.setDataNumber(menu_main_menu, "menu_option_selected", selectedIndex)
@@ -418,7 +423,9 @@ function menu_setup_red_team_selector () {
     miniMenu.createMenuItem("AI level 3")
     ])
     miniMenu.setTitle(menu_red_team_selector, "Set red team")
-    menu_red_team_selector.setPosition(scene.screenWidth() / 2, scene.screenHeight() / 2)
+    menu_red_team_selector.top = scene.screenHeight() * 0 + 4
+    menu_red_team_selector.left = scene.screenWidth() * 1 + 4
+    menu_red_team_selector.setFlag(SpriteFlag.RelativeToCamera, false)
     sprites.setDataNumber(menu_red_team_selector, "menu_option_selected", -1)
     miniMenu.onButtonPressed(menu_red_team_selector, miniMenu.Button.A, function (selection, selectedIndex) {
         sprites.setDataNumber(menu_red_team_selector, "menu_option_selected", selectedIndex)
@@ -712,7 +719,9 @@ function score_ball_throw_for_this_state (ball_id: number, angle: number, power2
 function menu_setup_game_end_condition_selector () {
     menu_game_end_condition_selector = miniMenu.createMenuFromArray([miniMenu.createMenuItem("End after 1 round")])
     miniMenu.setTitle(menu_game_end_condition_selector, "Set game end condition")
-    menu_game_end_condition_selector.setPosition(scene.screenWidth() / 2, scene.screenHeight() / 2)
+    menu_game_end_condition_selector.top = scene.screenHeight() * 0 + 4
+    menu_game_end_condition_selector.left = scene.screenWidth() * 1 + 4
+    menu_game_end_condition_selector.setFlag(SpriteFlag.RelativeToCamera, false)
     sprites.setDataNumber(menu_game_end_condition_selector, "menu_option_selected", -1)
     miniMenu.onButtonPressed(menu_game_end_condition_selector, miniMenu.Button.A, function (selection, selectedIndex) {
         sprites.setDataNumber(menu_game_end_condition_selector, "menu_option_selected", selectedIndex)
@@ -807,6 +816,10 @@ SHOW_BALL_THROW_UI_SIMULATION = true
 SHOW_AI_SIMULATION = true
 ghost_balls_to_render = [[0, 1]]
 ghost_balls_to_render.pop()
+let sprite_camera = sprites.create(img`
+    . 
+    `, SpriteKind.UI)
+scene.cameraFollowSprite(sprite_camera)
 timer.background(function () {
     tiles.loadMap(tiles.createSmallMap(tilemap`level2`))
     if (!(DEBUG)) {
@@ -818,6 +831,8 @@ timer.background(function () {
         pause(1000)
     }
     if (true) {
+        sprite_camera.left = 0
+        sprite_camera.top = 0
         text_sprite_temp = textsprite.create("Bocce", 0, 15)
         text_sprite_temp.setMaxFontHeight(10)
         text_sprite_temp.top = 16
@@ -843,6 +858,7 @@ timer.background(function () {
     game_options_green_team_type = 0
     game_options_end_condition_type = 0
     if (true) {
+        spriteutils.moveTo(sprite_camera, spriteutils.point(scene.screenWidth() * 1.5 + 1, scene.screenHeight() * 0.5), 1000)
         while (true) {
             menu_setup_main_menu()
             pauseUntil(() => sprites.readDataNumber(menu_main_menu, "menu_option_selected") != -1)
