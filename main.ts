@@ -118,6 +118,18 @@ function num_range (from_num: number, to_num: number, step_num: number) {
     }
     return local_num_list
 }
+function team_type_to_str (t: number) {
+    if (t == 0) {
+        return "human on P1 controls"
+    } else if (t == 1) {
+        return "AI level 1"
+    } else if (t == 2) {
+        return "AI level 2"
+    } else if (t == 3) {
+        return "AI level 3"
+    }
+    return ""
+}
 function balls_physics_tick_do_accelerations (state: number[][], dt: number) {
     state.push([0, 1])
     state.pop()
@@ -331,6 +343,44 @@ function DEBUG_throw_ball_ui_and_wait_for_stop (ball: Sprite, angle: number, pow
     }
     sprites.setDataNumber(ball, "ball_thrown", 1)
 }
+function menu_setup_green_team_selector () {
+    menu_green_team_selector = miniMenu.createMenuFromArray([
+    miniMenu.createMenuItem("Human on P1 controls"),
+    miniMenu.createMenuItem("AI level 1"),
+    miniMenu.createMenuItem("AI level 2"),
+    miniMenu.createMenuItem("AI level 3")
+    ])
+    miniMenu.setTitle(menu_green_team_selector, "Set green team")
+    menu_green_team_selector.setPosition(scene.screenWidth() / 2, scene.screenHeight() / 2)
+    sprites.setDataNumber(menu_green_team_selector, "menu_option_selected", -1)
+    miniMenu.onButtonPressed(menu_green_team_selector, miniMenu.Button.A, function (selection, selectedIndex) {
+        sprites.setDataNumber(menu_green_team_selector, "menu_option_selected", selectedIndex)
+    })
+    for (let index = 0; index < game_options_green_team_type; index++) {
+        miniMenu.moveSelection(menu_green_team_selector, miniMenu.MoveDirection.Down)
+    }
+}
+function menu_setup_main_menu () {
+    menu_main_menu = miniMenu.createMenuFromArray([
+    miniMenu.createMenuItem("Play!"),
+    miniMenu.createMenuItem("Set red team (currently " + team_type_to_str(game_options_red_team_type) + ")"),
+    miniMenu.createMenuItem("Set green team (currently " + team_type_to_str(game_options_green_team_type) + ")"),
+    miniMenu.createMenuItem("Set end condition (currently " + end_condition_to_str(game_options_end_condition_type) + ")")
+    ])
+    miniMenu.setDimensions(menu_main_menu, scene.screenWidth() - 8, scene.screenHeight() - 8)
+    miniMenu.setTitle(menu_main_menu, "Bocce options")
+    miniMenu.setMenuStyleProperty(menu_main_menu, miniMenu.MenuStyleProperty.BackgroundColor, images.colorBlock(1))
+    miniMenu.setMenuStyleProperty(menu_main_menu, miniMenu.MenuStyleProperty.UseAsTemplate, 1)
+    miniMenu.setStyleProperty(menu_main_menu, miniMenu.StyleKind.Selected, miniMenu.StyleProperty.Background, images.colorBlock(9))
+    miniMenu.setStyleProperty(menu_main_menu, miniMenu.StyleKind.Selected, miniMenu.StyleProperty.Foreground, images.colorBlock(15))
+    miniMenu.setStyleProperty(menu_main_menu, miniMenu.StyleKind.Title, miniMenu.StyleProperty.Background, images.colorBlock(15))
+    miniMenu.setStyleProperty(menu_main_menu, miniMenu.StyleKind.Title, miniMenu.StyleProperty.Foreground, images.colorBlock(1))
+    menu_main_menu.setPosition(scene.screenWidth() / 2, scene.screenHeight() / 2)
+    sprites.setDataNumber(menu_main_menu, "menu_option_selected", -1)
+    miniMenu.onButtonPressed(menu_main_menu, miniMenu.Button.A, function (selection, selectedIndex) {
+        sprites.setDataNumber(menu_main_menu, "menu_option_selected", selectedIndex)
+    })
+}
 spriteutils.createRenderable(0.9, function (screen2) {
     for (let local_ball7 of ghost_balls_to_render) {
         if (local_ball7[7] == 0) {
@@ -360,6 +410,23 @@ spriteutils.createRenderable(0.9, function (screen2) {
         }
     }
 })
+function menu_setup_red_team_selector () {
+    menu_red_team_selector = miniMenu.createMenuFromArray([
+    miniMenu.createMenuItem("Human on P1 controls"),
+    miniMenu.createMenuItem("AI level 1"),
+    miniMenu.createMenuItem("AI level 2"),
+    miniMenu.createMenuItem("AI level 3")
+    ])
+    miniMenu.setTitle(menu_red_team_selector, "Set red team")
+    menu_red_team_selector.setPosition(scene.screenWidth() / 2, scene.screenHeight() / 2)
+    sprites.setDataNumber(menu_red_team_selector, "menu_option_selected", -1)
+    miniMenu.onButtonPressed(menu_red_team_selector, miniMenu.Button.A, function (selection, selectedIndex) {
+        sprites.setDataNumber(menu_red_team_selector, "menu_option_selected", selectedIndex)
+    })
+    for (let index = 0; index < game_options_red_team_type; index++) {
+        miniMenu.moveSelection(menu_red_team_selector, miniMenu.MoveDirection.Down)
+    }
+}
 function balls_physics_tick (state: number[][], dt: number) {
     // Adding and removing a number array from state will force the compiler to realize that state is number[][]
     state.push([0, 1])
@@ -463,6 +530,12 @@ function are_all_balls_stopped (state: number[][]) {
         }
     }
     return true
+}
+function end_condition_to_str (t: number) {
+    if (t == 0) {
+        return "end after 1 round"
+    }
+    return ""
 }
 function get_next_unthrown_ball (states: number[][], ball_type: number) {
     states.push([0, 1])
@@ -636,6 +709,18 @@ function score_ball_throw_for_this_state (ball_id: number, angle: number, power2
     }
     return ai_score_state_red_pos_green_neg(states)
 }
+function menu_setup_game_end_condition_selector () {
+    menu_game_end_condition_selector = miniMenu.createMenuFromArray([miniMenu.createMenuItem("End after 1 round")])
+    miniMenu.setTitle(menu_game_end_condition_selector, "Set game end condition")
+    menu_game_end_condition_selector.setPosition(scene.screenWidth() / 2, scene.screenHeight() / 2)
+    sprites.setDataNumber(menu_game_end_condition_selector, "menu_option_selected", -1)
+    miniMenu.onButtonPressed(menu_game_end_condition_selector, miniMenu.Button.A, function (selection, selectedIndex) {
+        sprites.setDataNumber(menu_game_end_condition_selector, "menu_option_selected", selectedIndex)
+    })
+    for (let index = 0; index < game_options_end_condition_type; index++) {
+        miniMenu.moveSelection(menu_game_end_condition_selector, miniMenu.MoveDirection.Down)
+    }
+}
 function throw_ball_ai_and_wait_for_stop (ball: Sprite, effort: number) {
     scene.cameraFollowSprite(ball)
     local_current_balls_state = get_balls_states(sprites.allOfKind(SpriteKind.Player))
@@ -705,12 +790,19 @@ let local_ball_list: any[] = []
 let local_points = 0
 let local_out_team = 0
 let sprite_pallino: Sprite = null
+let menu_game_end_condition_selector: Sprite = null
+let menu_green_team_selector: Sprite = null
+let menu_red_team_selector: Sprite = null
+let menu_main_menu: Sprite = null
+let game_options_end_condition_type = 0
+let game_options_green_team_type = 0
+let game_options_red_team_type = 0
 let text_sprite_temp: TextSprite = null
 let ghost_balls_to_render: number[][] = []
 let SHOW_AI_SIMULATION = false
 let SHOW_BALL_THROW_UI_SIMULATION = false
 stats.turnStats(true)
-let DEBUG = false
+let DEBUG = true
 SHOW_BALL_THROW_UI_SIMULATION = true
 SHOW_AI_SIMULATION = true
 ghost_balls_to_render = [[0, 1]]
@@ -742,11 +834,40 @@ timer.background(function () {
         for (let text_sprite_temp of sprites.allOfKind(SpriteKind.Text)) {
             text_sprite_temp.x = scene.screenWidth() / 2
         }
+        color.startFade(color.Black, color.originalPalette, 2000)
+        color.pauseUntilFadeDone()
+        pauseUntil(() => controller.A.isPressed() || DEBUG)
+        pauseUntil(() => !(controller.A.isPressed()) || DEBUG)
     }
-    color.startFade(color.Black, color.originalPalette, 2000)
-    color.pauseUntilFadeDone()
-    pauseUntil(() => controller.A.isPressed())
-    pauseUntil(() => !(controller.A.isPressed()))
+    game_options_red_team_type = 0
+    game_options_green_team_type = 0
+    game_options_end_condition_type = 0
+    if (true) {
+        while (true) {
+            menu_setup_main_menu()
+            pauseUntil(() => sprites.readDataNumber(menu_main_menu, "menu_option_selected") != -1)
+            miniMenu.close(menu_main_menu)
+            if (sprites.readDataNumber(menu_main_menu, "menu_option_selected") == 0) {
+                break;
+            } else if (sprites.readDataNumber(menu_main_menu, "menu_option_selected") == 1) {
+                menu_setup_red_team_selector()
+                pauseUntil(() => sprites.readDataNumber(menu_red_team_selector, "menu_option_selected") != -1)
+                miniMenu.close(menu_red_team_selector)
+                game_options_red_team_type = sprites.readDataNumber(menu_red_team_selector, "menu_option_selected")
+            } else if (sprites.readDataNumber(menu_main_menu, "menu_option_selected") == 2) {
+                menu_setup_green_team_selector()
+                pauseUntil(() => sprites.readDataNumber(menu_green_team_selector, "menu_option_selected") != -1)
+                miniMenu.close(menu_green_team_selector)
+                game_options_green_team_type = sprites.readDataNumber(menu_green_team_selector, "menu_option_selected")
+            } else if (sprites.readDataNumber(menu_main_menu, "menu_option_selected") == 3) {
+                menu_setup_game_end_condition_selector()
+                pauseUntil(() => sprites.readDataNumber(menu_game_end_condition_selector, "menu_option_selected") != -1)
+                miniMenu.close(menu_game_end_condition_selector)
+                game_options_end_condition_type = sprites.readDataNumber(menu_game_end_condition_selector, "menu_option_selected")
+            }
+            pause(0)
+        }
+    }
     sprites.destroyAllSpritesOfKind(SpriteKind.Text)
     init_balls()
     tiles.placeOnTile(sprite_pallino, tiles.getTileLocation(50, 35))
