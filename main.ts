@@ -290,6 +290,37 @@ function tile_at_ball_is_one_of_these (ball: number[], tile_images: any[]) {
     return false
 }
 function ai_get_move (ball_id: number, states: any[], effort: number) {
+    local_ai_get_move_step = 1
+    local_ai_get_move_total_steps = 0
+    if (true) {
+        if (effort > 0) {
+            local_angles_to_try = num_range(0, 1.75 * spriteutils.consts(spriteutils.Consts.Pi) + 0.001, 0.25 * spriteutils.consts(spriteutils.Consts.Pi))
+            local_powers_to_try = [33]
+            local_ai_get_move_total_steps += local_angles_to_try.length * local_powers_to_try.length
+        }
+        if (effort > 0) {
+            local_angles_to_try = num_range(local_best_angle2 - 0.25 * spriteutils.consts(spriteutils.Consts.Pi), local_best_angle2 + 0.25 * spriteutils.consts(spriteutils.Consts.Pi) + 0.001, 0.125 * spriteutils.consts(spriteutils.Consts.Pi))
+            local_powers_to_try = num_range(33, 100, 33)
+            local_ai_get_move_total_steps += local_angles_to_try.length * local_powers_to_try.length
+        }
+        if (effort > 1) {
+            local_angles_to_try = num_range(local_best_angle2 - 0.125 * spriteutils.consts(spriteutils.Consts.Pi), local_best_angle2 + 0.125 * spriteutils.consts(spriteutils.Consts.Pi) + 0.001, 0.0625 * spriteutils.consts(spriteutils.Consts.Pi))
+            local_powers_to_try = num_range(33, 100, 16.5)
+            local_ai_get_move_total_steps += local_angles_to_try.length * local_powers_to_try.length
+        }
+        if (effort > 2) {
+            local_angles_to_try = num_range(local_best_angle2 - 0.0625 * spriteutils.consts(spriteutils.Consts.Pi), local_best_angle2 + 0.0625 * spriteutils.consts(spriteutils.Consts.Pi) + 0.001, 0.03125 * spriteutils.consts(spriteutils.Consts.Pi))
+            local_powers_to_try = num_range(33, 100, 8.25)
+            local_ai_get_move_total_steps += local_angles_to_try.length * local_powers_to_try.length
+        }
+    }
+    timer.background(function () {
+        while (local_ai_get_move_step != -1) {
+            get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), ball_id).sayText("Thinking... (" + local_ai_get_move_step + "/" + local_ai_get_move_total_steps + ")")
+            pause(0)
+        }
+        get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), ball_id).sayText("")
+    })
     if (effort > 0) {
         local_angles_to_try = num_range(0, 1.75 * spriteutils.consts(spriteutils.Consts.Pi) + 0.001, 0.25 * spriteutils.consts(spriteutils.Consts.Pi))
         local_powers_to_try = [33]
@@ -318,6 +349,7 @@ function ai_get_move (ball_id: number, states: any[], effort: number) {
         local_best_angle2 = local_test_results[0]
         local_best_power2 = local_test_results[1]
     }
+    local_ai_get_move_step = -1
     return [local_best_angle2, local_best_power2]
 }
 function get_balls_states (balls: any[]) {
@@ -696,6 +728,7 @@ function ai_test_these_angles_and_powers (angles: any[], powers: any[], ball_id:
                 ghost_balls_to_render = local_this_state
             }
             local_this_score = score_ball_throw_for_this_state(ball_id, local_this_angle, local_this_power, local_this_state)
+            local_ai_get_move_step += 1
             if (local_team == 1 && local_this_score > local_best_score || local_team == 2 && local_this_score < local_best_score) {
                 local_best_angle = local_this_angle
                 local_best_power = local_this_power
@@ -866,10 +899,12 @@ let text_sprite_instr1: TextSprite = null
 let local_state: number[] = []
 let local_states: number[][] = []
 let local_best_power2 = 0
-let local_best_angle2 = 0
 let local_test_results: number[] = []
+let local_best_angle2 = 0
 let local_powers_to_try: number[] = []
 let local_angles_to_try: number[] = []
+let local_ai_get_move_total_steps = 0
+let local_ai_get_move_step = 0
 let local_sprite_ball: Sprite = null
 let local_next_ball_id = 0
 let global_ball_state: number[][] = []
@@ -953,7 +988,7 @@ timer.background(function () {
     game_options_red_team_type = 0
     game_options_green_team_type = 0
     game_options_end_condition_type = 0
-    if (!(DEBUG)) {
+    if (true) {
         camera_move_to(scene.screenWidth() * 1.5 + 1, scene.screenHeight() * 0.5, true)
         while (true) {
             menu_setup_main_menu()
