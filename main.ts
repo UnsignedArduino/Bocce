@@ -1014,7 +1014,7 @@ let ghost_balls_to_render: number[][] = []
 let SHOW_AI_SIMULATION = false
 let SHOW_BALL_THROW_UI_SIMULATION = false
 stats.turnStats(true)
-let DEBUG = true
+let DEBUG = false
 SHOW_BALL_THROW_UI_SIMULATION = true
 SHOW_AI_SIMULATION = true
 ghost_balls_to_render = [[0, 1]]
