@@ -813,6 +813,9 @@ let local_closest_ball3: number[] = []
 let local_ordered_ball_list: number[][] = []
 let local_ball_list: any[] = []
 let local_points = 0
+let local_y = 0
+let local_x = 0
+let local_game_points = 0
 let local_out_team = 0
 let sprite_pallino: Sprite = null
 let menu_game_end_condition_selector: Sprite = null
@@ -849,8 +852,6 @@ timer.background(function () {
         pause(1000)
     }
     if (true) {
-        sprite_camera.left = 0
-        sprite_camera.top = 0
         text_sprite_temp = textsprite.create("Bocce", 0, 15)
         text_sprite_temp.setMaxFontHeight(10)
         text_sprite_temp.top = 16
@@ -867,7 +868,7 @@ timer.background(function () {
         for (let text_sprite_temp of sprites.allOfKind(SpriteKind.Text)) {
             text_sprite_temp.x = scene.screenWidth() / 2
         }
-        camera_move_to(scene.screenWidth() * 0.5, scene.screenHeight() * 0.5, false)
+        camera_move_to(scene.screenWidth() * 0.5, scene.screenHeight() * 0.5, true)
         color.startFade(color.Black, color.originalPalette, 2000)
         color.pauseUntilFadeDone()
         pauseUntil(() => controller.A.isPressed() || DEBUG)
@@ -946,7 +947,44 @@ timer.background(function () {
         }
         pause(0)
     }
-    game.splash(bocce_points_red_pos_green_neg(get_balls_states(sprites.allOfKind(SpriteKind.Player))))
+    camera_follow(sprite_pallino)
+    local_game_points = bocce_points_red_pos_green_neg(get_balls_states(sprites.allOfKind(SpriteKind.Player)))
+    if (local_game_points > 0) {
+        text_sprite_temp = textsprite.create("Red team wins!", 0, 15)
+    } else {
+        text_sprite_temp = textsprite.create("Green team wins!", 0, 15)
+    }
+    text_sprite_temp.x = scene.screenWidth() / 2
+    text_sprite_temp.top = 4
+    text_sprite_temp.setFlag(SpriteFlag.RelativeToCamera, true)
+    local_x = text_sprite_temp.x
+    local_y = text_sprite_temp.y
+    text_sprite_temp.bottom = 0
+    spriteutils.moveToAtSpeed(text_sprite_temp, spriteutils.point(local_x, local_y), 200)
+    if (Math.abs(local_game_points) == 1) {
+        text_sprite_temp = textsprite.create("1 point", 0, 15)
+    } else {
+        text_sprite_temp = textsprite.create("" + Math.abs(local_game_points) + " points", 0, 15)
+    }
+    text_sprite_temp.x = scene.screenWidth() / 2
+    text_sprite_temp.top = 14
+    text_sprite_temp.setFlag(SpriteFlag.RelativeToCamera, true)
+    local_x = text_sprite_temp.x
+    local_y = text_sprite_temp.y
+    text_sprite_temp.bottom = 0
+    spriteutils.moveToAtSpeed(text_sprite_temp, spriteutils.point(local_x, local_y), 200)
+    text_sprite_temp = textsprite.create("Press A to restart", 0, 15)
+    text_sprite_temp.top = 110
+    text_sprite_temp.x = scene.screenWidth() / 2
+    local_x = text_sprite_temp.x
+    local_y = text_sprite_temp.y
+    text_sprite_temp.top = scene.screenHeight()
+    spriteutils.moveToAtSpeed(text_sprite_temp, spriteutils.point(local_x, local_y), 200)
+    text_sprite_temp.setFlag(SpriteFlag.RelativeToCamera, true)
+    pauseUntil(() => controller.A.isPressed())
+    color.startFade(color.originalPalette, color.Black, 2000)
+    color.pauseUntilFadeDone()
+    game.reset()
 })
 game.onUpdate(function () {
     global_ball_state = get_balls_states(sprites.allOfKind(SpriteKind.Player))
