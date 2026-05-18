@@ -154,7 +154,7 @@ function throw_ball_ui_and_wait_for_stop (ball: Sprite) {
     local_current_balls_state = get_balls_states(sprites.allOfKind(SpriteKind.Player))
     throw_ball_ui(ball, local_current_balls_state)
     set_balls_states(sprites.allOfKind(SpriteKind.Player), local_current_balls_state)
-    scene.cameraFollowSprite(ball)
+    camera_follow(ball)
     pause(100)
     while (!(are_all_balls_stopped(global_ball_state))) {
         pause(100)
@@ -277,6 +277,9 @@ function get_ball_from_id (states: number[][], ball_id: number) {
     }
     return []
 }
+function camera_follow (s: Sprite) {
+    sprite_camera.follow(s)
+}
 function tile_at_ball_is_one_of_these (ball: number[], tile_images: any[]) {
     for (let local_tile_image of tile_images) {
         if (tiles.tileAtLocationEquals(xy_to_loc(ball[1], ball[2]), local_tile_image)) {
@@ -340,7 +343,7 @@ function DEBUG_throw_ball_ui_and_wait_for_stop (ball: Sprite, angle: number, pow
     local_current_balls_state = get_balls_states(sprites.allOfKind(SpriteKind.Player))
     apply_ball_throw_to_state(angle, power2, sprites.readDataNumber(ball, "ball_id"), local_current_balls_state)
     set_balls_states(sprites.allOfKind(SpriteKind.Player), local_current_balls_state)
-    scene.cameraFollowSprite(ball)
+    camera_follow(ball)
     pause(100)
     while (!(are_all_balls_stopped(global_ball_state))) {
         pause(100)
@@ -479,19 +482,19 @@ function throw_ball_ui (ball: Sprite, states: any[]) {
         if (controller.A.isPressed()) {
             break;
         } else if (controller.B.isPressed()) {
-            scene.cameraFollowSprite(null)
+            camera_stop_follow()
             if (controller.up.isPressed() && !(controller.down.isPressed())) {
-                scene.centerCameraAt(scene.cameraProperty(CameraProperty.X) + 0, scene.cameraProperty(CameraProperty.Y) + -1)
+                camera_move_to(scene.cameraProperty(CameraProperty.X) + 0, scene.cameraProperty(CameraProperty.Y) + -1, false)
             } else if (controller.down.isPressed() && !(controller.up.isPressed())) {
-                scene.centerCameraAt(scene.cameraProperty(CameraProperty.X) + 0, scene.cameraProperty(CameraProperty.Y) + 1)
+                camera_move_to(scene.cameraProperty(CameraProperty.X) + 0, scene.cameraProperty(CameraProperty.Y) + 1, false)
             }
             if (controller.left.isPressed() && !(controller.right.isPressed())) {
-                scene.centerCameraAt(scene.cameraProperty(CameraProperty.X) + -1, scene.cameraProperty(CameraProperty.Y) + 0)
+                camera_move_to(scene.cameraProperty(CameraProperty.X) + -1, scene.cameraProperty(CameraProperty.Y) + 0, false)
             } else if (controller.right.isPressed() && !(controller.left.isPressed())) {
-                scene.centerCameraAt(scene.cameraProperty(CameraProperty.X) + 1, scene.cameraProperty(CameraProperty.Y) + 0)
+                camera_move_to(scene.cameraProperty(CameraProperty.X) + 1, scene.cameraProperty(CameraProperty.Y) + 0, false)
             }
         } else {
-            scene.cameraFollowSprite(ball)
+            camera_follow(ball)
             if (controller.up.isPressed() && !(controller.down.isPressed())) {
                 throw_power = Math.constrain(throw_power + 0.5, 33, 100)
             } else if (controller.down.isPressed() && !(controller.up.isPressed())) {
@@ -507,7 +510,7 @@ function throw_ball_ui (ball: Sprite, states: any[]) {
     }
     ball_to_draw_throw_ui_around = spriteutils.nullConsts(spriteutils.NullConsts.Null)
     apply_ball_throw_to_state(throw_angle, throw_power, sprites.readDataNumber(ball, "ball_id"), states)
-    scene.cameraFollowSprite(null)
+    camera_stop_follow()
 }
 function record_pallino_start_spot () {
     sprite_pallino_start_spot = sprites.create(img`
@@ -540,6 +543,9 @@ function are_all_balls_stopped (state: number[][]) {
         }
     }
     return true
+}
+function camera_stop_follow () {
+    sprite_camera.follow(null)
 }
 function end_condition_to_str (t: number) {
     if (t == 0) {
@@ -577,6 +583,13 @@ function these_sprites_are_overlapping (sprites2: any[]) {
         }
     }
     return false
+}
+function camera_move_to (x: number, y: number, animate: boolean) {
+    if (animate) {
+        spriteutils.moveToAtSpeed(sprite_camera, spriteutils.point(x, y), 200)
+    } else {
+        sprite_camera.setPosition(x, y)
+    }
 }
 spriteutils.createRenderable(1, function (screen2) {
     if (!(spriteutils.isDestroyed(ball_to_draw_throw_ui_around))) {
@@ -734,7 +747,7 @@ function menu_setup_game_end_condition_selector () {
     }
 }
 function throw_ball_ai_and_wait_for_stop (ball: Sprite, effort: number) {
-    scene.cameraFollowSprite(ball)
+    camera_follow(ball)
     local_current_balls_state = get_balls_states(sprites.allOfKind(SpriteKind.Player))
     local_move = ai_get_move(sprites.readDataNumber(ball, "ball_id"), local_current_balls_state, effort)
     apply_ball_throw_to_state(local_move[0], local_move[1], sprites.readDataNumber(ball, "ball_id"), local_current_balls_state)
@@ -810,6 +823,7 @@ let game_options_end_condition_type = 0
 let game_options_green_team_type = 0
 let game_options_red_team_type = 0
 let text_sprite_temp: TextSprite = null
+let sprite_camera: Sprite = null
 let ghost_balls_to_render: number[][] = []
 let SHOW_AI_SIMULATION = false
 let SHOW_BALL_THROW_UI_SIMULATION = false
@@ -819,9 +833,10 @@ SHOW_BALL_THROW_UI_SIMULATION = true
 SHOW_AI_SIMULATION = true
 ghost_balls_to_render = [[0, 1]]
 ghost_balls_to_render.pop()
-let sprite_camera = sprites.create(img`
+sprite_camera = sprites.create(img`
     . 
     `, SpriteKind.UI)
+sprite_camera.setFlag(SpriteFlag.Ghost, true)
 scene.cameraFollowSprite(sprite_camera)
 timer.background(function () {
     tiles.loadMap(tiles.createSmallMap(tilemap`level2`))
@@ -852,23 +867,27 @@ timer.background(function () {
         for (let text_sprite_temp of sprites.allOfKind(SpriteKind.Text)) {
             text_sprite_temp.x = scene.screenWidth() / 2
         }
+        camera_move_to(scene.screenWidth() * 0.5, scene.screenHeight() * 0.5, false)
         color.startFade(color.Black, color.originalPalette, 2000)
         color.pauseUntilFadeDone()
         pauseUntil(() => controller.A.isPressed() || DEBUG)
+        pause(100)
         pauseUntil(() => !(controller.A.isPressed()) || DEBUG)
+        pause(100)
     }
     game_options_red_team_type = 0
     game_options_green_team_type = 0
     game_options_end_condition_type = 0
     if (true) {
-        spriteutils.moveTo(sprite_camera, spriteutils.point(scene.screenWidth() * 1.5 + 1, scene.screenHeight() * 0.5), 1000)
+        camera_move_to(scene.screenWidth() * 1.5 + 1, scene.screenHeight() * 0.5, true)
         while (true) {
             menu_setup_main_menu()
             pauseUntil(() => sprites.readDataNumber(menu_main_menu, "menu_option_selected") != -1)
-            miniMenu.close(menu_main_menu)
             if (sprites.readDataNumber(menu_main_menu, "menu_option_selected") == 0) {
                 break;
-            } else if (sprites.readDataNumber(menu_main_menu, "menu_option_selected") == 1) {
+            }
+            miniMenu.close(menu_main_menu)
+            if (sprites.readDataNumber(menu_main_menu, "menu_option_selected") == 1) {
                 menu_setup_red_team_selector()
                 pauseUntil(() => sprites.readDataNumber(menu_red_team_selector, "menu_option_selected") != -1)
                 miniMenu.close(menu_red_team_selector)
@@ -884,9 +903,9 @@ timer.background(function () {
                 miniMenu.close(menu_game_end_condition_selector)
                 game_options_end_condition_type = sprites.readDataNumber(menu_game_end_condition_selector, "menu_option_selected")
             }
-            pause(0)
         }
     }
+    menu_main_menu.setFlag(SpriteFlag.AutoDestroy, true)
     sprites.destroyAllSpritesOfKind(SpriteKind.Text)
     init_balls()
     tiles.placeOnTile(sprite_pallino, tiles.getTileLocation(50, 35))
