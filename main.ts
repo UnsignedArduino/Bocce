@@ -111,6 +111,13 @@ function place_other_balls_wrt_pallino_start_spot () {
     )
     sprites.destroy(sprite_pallino_start_spot)
 }
+function num_range (from_num: number, to_num: number, step_num: number) {
+    local_num_list = [from_num]
+    while (local_num_list[local_num_list.length - 1] + step_num <= to_num) {
+        local_num_list.push(local_num_list[local_num_list.length - 1] + step_num)
+    }
+    return local_num_list
+}
 function balls_physics_tick_do_accelerations (state: number[][], dt: number) {
     state.push([0, 1])
     state.pop()
@@ -263,38 +270,35 @@ function tile_at_ball_is_one_of_these (ball: number[], tile_images: any[]) {
     return false
 }
 function ai_get_move (ball_id: number, states: any[]) {
-    local_team = get_ball_from_id(states, ball_id)[7]
-    local_best_angle = 0
-    local_best_power = 0
-    if (local_team == 1) {
-        local_best_score = -999999999999999
-    } else {
-        local_best_score = 999999999999999
+    if (true) {
+        local_angles_to_try = num_range(0, 1.75 * spriteutils.consts(spriteutils.Consts.Pi) + 0.001, 0.25 * spriteutils.consts(spriteutils.Consts.Pi))
+        local_powers_to_try = [33]
+        local_test_results = ai_test_these_angles_and_powers(local_angles_to_try, local_powers_to_try, ball_id, states)
+        local_best_angle2 = local_test_results[0]
+        local_best_power2 = local_test_results[1]
     }
-    local_angles_to_try = [
-    0 * spriteutils.consts(spriteutils.Consts.Pi),
-    0.25 * spriteutils.consts(spriteutils.Consts.Pi),
-    0.5 * spriteutils.consts(spriteutils.Consts.Pi),
-    0.75 * spriteutils.consts(spriteutils.Consts.Pi),
-    1 * spriteutils.consts(spriteutils.Consts.Pi),
-    1.25 * spriteutils.consts(spriteutils.Consts.Pi),
-    1.5 * spriteutils.consts(spriteutils.Consts.Pi),
-    1.75 * spriteutils.consts(spriteutils.Consts.Pi)
-    ]
-    local_powers_to_try = [33, 67, 100]
-    for (let local_this_angle of local_angles_to_try) {
-        for (let local_this_power of local_powers_to_try) {
-            local_this_state = copy_balls_state(states)
-            ghost_balls_to_render = local_this_state
-            local_this_score = score_ball_throw_for_this_state(ball_id, local_this_angle, local_this_power, local_this_state)
-            if (local_team == 1 && local_this_score > local_best_score || local_team == 2 && local_this_score < local_best_score) {
-                local_best_angle = local_this_angle
-                local_best_power = local_this_power
-                local_best_score = local_this_score
-            }
-        }
+    if (true) {
+        local_angles_to_try = num_range(local_best_angle2 - 0.25 * spriteutils.consts(spriteutils.Consts.Pi), local_best_angle2 + 0.25 * spriteutils.consts(spriteutils.Consts.Pi) + 0.001, 0.125 * spriteutils.consts(spriteutils.Consts.Pi))
+        local_powers_to_try = num_range(33, 100, 33)
+        local_test_results = ai_test_these_angles_and_powers(local_angles_to_try, local_powers_to_try, ball_id, states)
+        local_best_angle2 = local_test_results[0]
+        local_best_power2 = local_test_results[1]
     }
-    return [local_best_angle, local_best_power]
+    if (true) {
+        local_angles_to_try = num_range(local_best_angle2 - 0.125 * spriteutils.consts(spriteutils.Consts.Pi), local_best_angle2 + 0.125 * spriteutils.consts(spriteutils.Consts.Pi) + 0.001, 0.0625 * spriteutils.consts(spriteutils.Consts.Pi))
+        local_powers_to_try = num_range(33, 100, 16.5)
+        local_test_results = ai_test_these_angles_and_powers(local_angles_to_try, local_powers_to_try, ball_id, states)
+        local_best_angle2 = local_test_results[0]
+        local_best_power2 = local_test_results[1]
+    }
+    if (true) {
+        local_angles_to_try = num_range(local_best_angle2 - 0.0625 * spriteutils.consts(spriteutils.Consts.Pi), local_best_angle2 + 0.0625 * spriteutils.consts(spriteutils.Consts.Pi) + 0.001, 0.03125 * spriteutils.consts(spriteutils.Consts.Pi))
+        local_powers_to_try = num_range(33, 100, 8.25)
+        local_test_results = ai_test_these_angles_and_powers(local_angles_to_try, local_powers_to_try, ball_id, states)
+        local_best_angle2 = local_test_results[0]
+        local_best_power2 = local_test_results[1]
+    }
+    return [local_best_angle2, local_best_power2]
 }
 function get_balls_states (balls: any[]) {
     local_states = []
@@ -499,6 +503,30 @@ function apply_ball_throw_to_state (angle: number, power2: number, ball_id: numb
     local_state6[4] = power2 * Math.sin(angle * -1)
     local_state6[8] = 1
 }
+function ai_test_these_angles_and_powers (angles: any[], powers: any[], ball_id: number, states: any[]) {
+    local_team = get_ball_from_id(states, ball_id)[7]
+    local_best_angle = 0
+    local_best_power = 0
+    if (local_team == 1) {
+        local_best_score = -999999999999999
+    } else {
+        local_best_score = 999999999999999
+    }
+    for (let local_this_angle of angles) {
+        for (let local_this_power of powers) {
+            local_this_state = copy_balls_state(states)
+            ghost_balls_to_render = local_this_state
+            local_this_score = score_ball_throw_for_this_state(ball_id, local_this_angle, local_this_power, local_this_state)
+            if (local_team == 1 && local_this_score > local_best_score || local_team == 2 && local_this_score < local_best_score) {
+                local_best_angle = local_this_angle
+                local_best_power = local_this_power
+                local_best_score = local_this_score
+            }
+        }
+    }
+    ghost_balls_to_render = []
+    return [local_best_angle, local_best_power]
+}
 function brute_force_scatter_balls_around_point (balls: Sprite[], math_sprite: Sprite, try_radius: number) {
     balls.push(sprites.create(img`
         . 
@@ -623,6 +651,12 @@ let local_dy = 0
 let local_dx = 0
 let local_ball_b: number[] = []
 let local_ball_a: number[] = []
+let local_this_score = 0
+let local_this_state: number[][] = []
+let local_best_score = 0
+let local_best_power = 0
+let local_best_angle = 0
+let local_team = 0
 let local_state6: number[] = []
 let local_sprite_b: Sprite = null
 let local_sprite_a: Sprite = null
@@ -632,20 +666,18 @@ let throw_angle = 0
 let ball_to_draw_throw_ui_around: Sprite = null
 let local_state: number[] = []
 let local_states: number[][] = []
-let local_this_score = 0
-let local_this_state: number[][] = []
+let local_best_power2 = 0
+let local_best_angle2 = 0
+let local_test_results: number[] = []
 let local_powers_to_try: number[] = []
 let local_angles_to_try: number[] = []
-let local_best_score = 0
-let local_best_power = 0
-let local_best_angle = 0
-let local_team = 0
 let local_sprite_ball: Sprite = null
 let local_next_ball_id = 0
 let global_ball_state: number[][] = []
 let local_current_balls_state: number[][] = []
 let local_delta_v = 0
 let local_speed = 0
+let local_num_list: number[] = []
 let sprites_green_balls: Sprite[] = []
 let sprites_red_balls: Sprite[] = []
 let local_score = 0
