@@ -291,6 +291,14 @@ function init_balls () {
     sprites.setDataNumber(sprite_pallino, "ball_mass", 1)
     sprites.setDataNumber(sprite_pallino, "ball_radius", 3)
 }
+spriteutils.createRenderable(1, function (screen2) {
+    if (!(spriteutils.isDestroyed(ball_to_draw_throw_ui_around))) {
+        screen2.drawLine(ball_to_draw_throw_ui_around.x - scene.cameraProperty(CameraProperty.Left) - 0, ball_to_draw_throw_ui_around.y - scene.cameraProperty(CameraProperty.Top) - 0, ball_to_draw_throw_ui_around.x - scene.cameraProperty(CameraProperty.Left) - 0 + throw_power / 2 * Math.cos(throw_angle * -1), ball_to_draw_throw_ui_around.y - scene.cameraProperty(CameraProperty.Top) - 0 + throw_power / 2 * Math.sin(throw_angle * -1), 15)
+    }
+    if (!(spriteutils.isDestroyed(sprite_ball_ai_is_moving)) && SHOW_AI_SIMULATION) {
+        screen2.drawLine(sprite_ball_ai_is_moving.x - scene.cameraProperty(CameraProperty.Left) - 0, sprite_ball_ai_is_moving.y - scene.cameraProperty(CameraProperty.Top) - 0, sprite_ball_ai_is_moving.x - scene.cameraProperty(CameraProperty.Left) - 0 + ai_trying_this_power / 2 * Math.cos(ai_trying_this_angle * -1), sprite_ball_ai_is_moving.y - scene.cameraProperty(CameraProperty.Top) - 0 + ai_trying_this_power / 2 * Math.sin(ai_trying_this_angle * -1), 15)
+    }
+})
 function get_ball_from_id (states: number[][], ball_id: number) {
     states.push([0, 1])
     states.pop()
@@ -358,6 +366,7 @@ function ai_get_move (ball_id: number, states: any[], effort: number) {
         statusbar_ai_thinking_progress.setFlag(SpriteFlag.AutoDestroy, true)
         statusbar_ai_thinking_progress.vy = -100
     })
+    sprite_ball_ai_is_moving = get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), ball_id)
     if (effort > 0) {
         local_angles_to_try = num_range(0, 1.75 * spriteutils.consts(spriteutils.Consts.Pi) + 0.001, 0.25 * spriteutils.consts(spriteutils.Consts.Pi))
         local_powers_to_try = [33]
@@ -387,6 +396,7 @@ function ai_get_move (ball_id: number, states: any[], effort: number) {
         local_best_power2 = local_test_results[1]
     }
     local_ai_get_move_step = -1
+    sprite_ball_ai_is_moving = spriteutils.nullConsts(spriteutils.NullConsts.Null)
     return [local_best_angle2, local_best_power2]
 }
 function get_balls_states (balls: any[]) {
@@ -743,11 +753,6 @@ function camera_move_to (x: number, y: number, animate: boolean) {
         sprite_camera.setPosition(x, y)
     }
 }
-spriteutils.createRenderable(1, function (screen2) {
-    if (!(spriteutils.isDestroyed(ball_to_draw_throw_ui_around))) {
-        screen2.drawLine(ball_to_draw_throw_ui_around.x - scene.cameraProperty(CameraProperty.Left) - 0, ball_to_draw_throw_ui_around.y - scene.cameraProperty(CameraProperty.Top) - 0, ball_to_draw_throw_ui_around.x - scene.cameraProperty(CameraProperty.Left) - 0 + throw_power / 2 * Math.cos(throw_angle * -1), ball_to_draw_throw_ui_around.y - scene.cameraProperty(CameraProperty.Top) - 0 + throw_power / 2 * Math.sin(throw_angle * -1), 15)
-    }
-})
 function apply_ball_throw_to_state (angle: number, power2: number, ball_id: number, states: number[][]) {
     states.push([0, 1])
     states.pop()
@@ -772,6 +777,8 @@ function ai_test_these_angles_and_powers (angles: any[], powers: any[], ball_id:
     }
     for (let local_this_angle of angles) {
         for (let local_this_power of powers) {
+            ai_trying_this_angle = local_this_angle
+            ai_trying_this_power = local_this_power
             local_this_state = copy_balls_state(states)
             if (SHOW_AI_SIMULATION) {
                 ghost_balls_to_render = local_this_state
@@ -947,10 +954,7 @@ let local_state6: number[] = []
 let local_sprite_b: Sprite = null
 let local_sprite_a: Sprite = null
 let local_states2: number[][] = []
-let throw_power = 0
-let throw_angle = 0
 let local_state_copy: number[][] = []
-let ball_to_draw_throw_ui_around: Sprite = null
 let text_sprite_instr4: TextSprite = null
 let text_sprite_instr3: TextSprite = null
 let text_sprite_instr2: TextSprite = null
@@ -965,6 +969,12 @@ let local_powers_to_try: number[] = []
 let local_angles_to_try: number[] = []
 let local_ai_get_move_total_steps = 0
 let local_ai_get_move_step = 0
+let ai_trying_this_angle = 0
+let ai_trying_this_power = 0
+let sprite_ball_ai_is_moving: Sprite = null
+let throw_angle = 0
+let throw_power = 0
+let ball_to_draw_throw_ui_around: Sprite = null
 let local_sprite_ball: Sprite = null
 let local_next_ball_id = 0
 let global_ball_state: number[][] = []
