@@ -705,6 +705,7 @@ let local_ball_list: any[] = []
 let local_points = 0
 let local_out_team = 0
 let sprite_pallino: Sprite = null
+let text_sprite_temp: TextSprite = null
 let ghost_balls_to_render: number[][] = []
 let SHOW_AI_SIMULATION = false
 let SHOW_BALL_THROW_UI_SIMULATION = false
@@ -716,11 +717,44 @@ ghost_balls_to_render = [[0, 1]]
 ghost_balls_to_render.pop()
 timer.background(function () {
     tiles.loadMap(tiles.createSmallMap(tilemap`level2`))
+    if (!(DEBUG)) {
+        LoadingAnimations.show_splash()
+        pause(3000)
+        color.startFade(color.originalPalette, color.Black, 2000)
+        color.pauseUntilFadeDone()
+        LoadingAnimations.hide_splash()
+        pause(1000)
+    }
+    if (true) {
+        text_sprite_temp = textsprite.create("Bocce", 0, 15)
+        text_sprite_temp.setMaxFontHeight(10)
+        text_sprite_temp.top = 16
+        text_sprite_temp = textsprite.create("A game by Cyrus Yiu", 0, 15)
+        text_sprite_temp.top = 30
+        text_sprite_temp = textsprite.create("MakeCode Arcade 12th", 0, 15)
+        text_sprite_temp.top = 50
+        text_sprite_temp = textsprite.create("Game Jam \"Sports\"", 0, 15)
+        text_sprite_temp.top = 60
+        text_sprite_temp = textsprite.create("submission", 0, 15)
+        text_sprite_temp.top = 70
+        text_sprite_temp = textsprite.create("Press A to begin", 0, 15)
+        text_sprite_temp.top = 110
+        for (let text_sprite_temp of sprites.allOfKind(SpriteKind.Text)) {
+            text_sprite_temp.x = scene.screenWidth() / 2
+        }
+    }
+    color.startFade(color.Black, color.originalPalette, 2000)
+    color.pauseUntilFadeDone()
+    pauseUntil(() => controller.A.isPressed())
+    pause(100)
+    pauseUntil(() => !(controller.A.isPressed()))
+    pause(100)
+    sprites.destroyAllSpritesOfKind(SpriteKind.Text)
     init_balls()
     tiles.placeOnTile(sprite_pallino, tiles.getTileLocation(50, 35))
     hide_other_balls()
     record_pallino_start_spot()
-    if (DEBUG) {
+    if (false) {
         DEBUG_throw_ball_ui_and_wait_for_stop(sprite_pallino, randint(0, 628318) / 100000, randint(33, 50))
     } else {
         throw_ball_ui_and_wait_for_stop(sprite_pallino)
