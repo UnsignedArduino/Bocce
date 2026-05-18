@@ -14,7 +14,8 @@
         "InhouseLoadingAnimations": "github:unsignedarduino/inhouseloadinganimations#v1.1.0",
         "Color Fading": "github:jwunderl/pxt-color#v0.2.3",
         "ColorBlock": "github:UnsignedArduino/ColorBlock#ac7b9500e40045cf1ddd8c5b7481d11bcb317f5f",
-        "arcade-text": "github:microsoft/arcade-text#v1.3.0"
+        "arcade-text": "github:microsoft/arcade-text#v1.3.0",
+        "pxt-status-bar": "github:jwunderl/pxt-status-bar#v0.4.2"
     },
     "files": [
         "main.blocks",

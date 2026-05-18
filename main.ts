@@ -2,6 +2,9 @@ namespace SpriteKind {
     export const Math = SpriteKind.create()
     export const UI = SpriteKind.create()
 }
+namespace StatusBarKind {
+    export const Progress = StatusBarKind.create()
+}
 function bocce_points_red_pos_green_neg (states: number[][]) {
     states.push([0, 1])
     states.pop()
@@ -336,11 +339,24 @@ function ai_get_move (ball_id: number, states: any[], effort: number) {
         }
     }
     timer.background(function () {
+        statusbar_ai_thinking_progress = statusbars.create(152, 4, StatusBarKind.Progress)
+        statusbar_ai_thinking_progress.max = local_ai_get_move_total_steps
+        statusbar_ai_thinking_progress.setColor(15, 1)
+        statusbar_ai_thinking_progress.setBarBorder(1, 15)
+        statusbar_ai_thinking_progress.top = 4
+        statusbar_ai_thinking_progress.left = 4
+        statusbar_ai_thinking_progress.setFlag(SpriteFlag.RelativeToCamera, true)
+        statusbar_ai_thinking_progress.setFlag(SpriteFlag.Ghost, true)
+        local_x = statusbar_ai_thinking_progress.x
+        local_y = statusbar_ai_thinking_progress.y
+        statusbar_ai_thinking_progress.bottom = 0
+        spriteutils.moveToAtSpeed(statusbar_ai_thinking_progress, spriteutils.point(local_x, local_y), 100)
         while (local_ai_get_move_step != -1) {
-            get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), ball_id).sayText("Thinking... (" + local_ai_get_move_step + "/" + local_ai_get_move_total_steps + ")")
+            statusbar_ai_thinking_progress.value = local_ai_get_move_step
             pause(0)
         }
-        get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), ball_id).sayText("")
+        statusbar_ai_thinking_progress.setFlag(SpriteFlag.AutoDestroy, true)
+        statusbar_ai_thinking_progress.vy = -100
     })
     if (effort > 0) {
         local_angles_to_try = num_range(0, 1.75 * spriteutils.consts(spriteutils.Consts.Pi) + 0.001, 0.25 * spriteutils.consts(spriteutils.Consts.Pi))
@@ -943,6 +959,7 @@ let local_state: number[] = []
 let local_states: number[][] = []
 let local_best_power2 = 0
 let local_test_results: number[] = []
+let statusbar_ai_thinking_progress: StatusBarSprite = null
 let local_best_angle2 = 0
 let local_powers_to_try: number[] = []
 let local_angles_to_try: number[] = []
