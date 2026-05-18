@@ -60,6 +60,27 @@ function get_out_team (states: any[]) {
     }
     return -1
 }
+function menu_setup_sim_settings (start_idx: number) {
+    menu_sim_settings = miniMenu.createMenuFromArray([
+    miniMenu.createMenuItem("Back"),
+    miniMenu.createMenuItem(ternary_str(SHOW_BALL_THROW_UI_SIMULATION, "[T] Disable simulations during human throws", "[F] Enable simulations during human throws")),
+    miniMenu.createMenuItem(ternary_str(SHOW_AI_SIMULATION, "[T] Disable seeing simulations during AI thinking", "[F] Enable seeing simulations during AI thinking"))
+    ])
+    miniMenu.setTitle(menu_sim_settings, "Simulation settings")
+    menu_sim_settings.top = scene.screenHeight() * 0 + 4
+    menu_sim_settings.left = scene.screenWidth() * 1 + 4
+    menu_sim_settings.setFlag(SpriteFlag.RelativeToCamera, false)
+    sprites.setDataNumber(menu_sim_settings, "menu_option_selected", -1)
+    miniMenu.onButtonPressed(menu_sim_settings, miniMenu.Button.A, function (selection, selectedIndex) {
+        sprites.setDataNumber(menu_sim_settings, "menu_option_selected", selectedIndex)
+    })
+    miniMenu.onButtonPressed(menu_sim_settings, miniMenu.Button.B, function (selection, selectedIndex) {
+        sprites.setDataNumber(menu_sim_settings, "menu_option_selected", 0)
+    })
+    for (let index = 0; index < start_idx; index++) {
+        miniMenu.moveSelection(menu_sim_settings, miniMenu.MoveDirection.Down)
+    }
+}
 function ai_score_state_red_pos_green_neg (states: number[][]) {
     states.push([0, 1])
     states.pop()
@@ -385,6 +406,7 @@ function DEBUG_throw_ball_ui_and_wait_for_stop (ball: Sprite, angle: number, pow
 }
 function menu_setup_green_team_selector () {
     menu_green_team_selector = miniMenu.createMenuFromArray([
+    miniMenu.createMenuItem("Cancel"),
     miniMenu.createMenuItem("Human on P1 controls"),
     miniMenu.createMenuItem("AI level 1"),
     miniMenu.createMenuItem("AI level 2"),
@@ -398,16 +420,20 @@ function menu_setup_green_team_selector () {
     miniMenu.onButtonPressed(menu_green_team_selector, miniMenu.Button.A, function (selection, selectedIndex) {
         sprites.setDataNumber(menu_green_team_selector, "menu_option_selected", selectedIndex)
     })
-    for (let index = 0; index < game_options_green_team_type; index++) {
+    miniMenu.onButtonPressed(menu_green_team_selector, miniMenu.Button.B, function (selection, selectedIndex) {
+        sprites.setDataNumber(menu_green_team_selector, "menu_option_selected", 0)
+    })
+    for (let index = 0; index < game_options_green_team_type + 1; index++) {
         miniMenu.moveSelection(menu_green_team_selector, miniMenu.MoveDirection.Down)
     }
 }
-function menu_setup_main_menu () {
+function menu_setup_main_menu (start_idx: number) {
     menu_main_menu = miniMenu.createMenuFromArray([
     miniMenu.createMenuItem("Play!"),
     miniMenu.createMenuItem("Set red team (currently " + team_type_to_str(game_options_red_team_type) + ")"),
     miniMenu.createMenuItem("Set green team (currently " + team_type_to_str(game_options_green_team_type) + ")"),
-    miniMenu.createMenuItem("Set end condition (currently " + end_condition_to_str(game_options_end_condition_type) + ")")
+    miniMenu.createMenuItem("Set end condition (currently " + end_condition_to_str(game_options_end_condition_type) + ")"),
+    miniMenu.createMenuItem("Simulation settings")
     ])
     miniMenu.setDimensions(menu_main_menu, scene.screenWidth() - 8, scene.screenHeight() - 8)
     miniMenu.setTitle(menu_main_menu, "Bocce options")
@@ -424,6 +450,9 @@ function menu_setup_main_menu () {
     miniMenu.onButtonPressed(menu_main_menu, miniMenu.Button.A, function (selection, selectedIndex) {
         sprites.setDataNumber(menu_main_menu, "menu_option_selected", selectedIndex)
     })
+    for (let index = 0; index < start_idx; index++) {
+        miniMenu.moveSelection(menu_main_menu, miniMenu.MoveDirection.Down)
+    }
 }
 spriteutils.createRenderable(0.9, function (screen2) {
     for (let local_ball7 of ghost_balls_to_render) {
@@ -456,6 +485,7 @@ spriteutils.createRenderable(0.9, function (screen2) {
 })
 function menu_setup_red_team_selector () {
     menu_red_team_selector = miniMenu.createMenuFromArray([
+    miniMenu.createMenuItem("Cancel"),
     miniMenu.createMenuItem("Human on P1 controls"),
     miniMenu.createMenuItem("AI level 1"),
     miniMenu.createMenuItem("AI level 2"),
@@ -469,7 +499,10 @@ function menu_setup_red_team_selector () {
     miniMenu.onButtonPressed(menu_red_team_selector, miniMenu.Button.A, function (selection, selectedIndex) {
         sprites.setDataNumber(menu_red_team_selector, "menu_option_selected", selectedIndex)
     })
-    for (let index = 0; index < game_options_red_team_type; index++) {
+    miniMenu.onButtonPressed(menu_red_team_selector, miniMenu.Button.B, function (selection, selectedIndex) {
+        sprites.setDataNumber(menu_red_team_selector, "menu_option_selected", 0)
+    })
+    for (let index = 0; index < game_options_red_team_type + 1; index++) {
         miniMenu.moveSelection(menu_red_team_selector, miniMenu.MoveDirection.Down)
     }
 }
@@ -837,7 +870,7 @@ function score_ball_throw_for_this_state (ball_id: number, angle: number, power2
     return ai_score_state_red_pos_green_neg(states)
 }
 function menu_setup_game_end_condition_selector () {
-    menu_game_end_condition_selector = miniMenu.createMenuFromArray([miniMenu.createMenuItem("End after 1 round")])
+    menu_game_end_condition_selector = miniMenu.createMenuFromArray([miniMenu.createMenuItem("Cancel"), miniMenu.createMenuItem("End after 1 round")])
     miniMenu.setTitle(menu_game_end_condition_selector, "Set game end condition")
     menu_game_end_condition_selector.top = scene.screenHeight() * 0 + 4
     menu_game_end_condition_selector.left = scene.screenWidth() * 1 + 4
@@ -846,7 +879,10 @@ function menu_setup_game_end_condition_selector () {
     miniMenu.onButtonPressed(menu_game_end_condition_selector, miniMenu.Button.A, function (selection, selectedIndex) {
         sprites.setDataNumber(menu_game_end_condition_selector, "menu_option_selected", selectedIndex)
     })
-    for (let index = 0; index < game_options_end_condition_type; index++) {
+    miniMenu.onButtonPressed(menu_game_end_condition_selector, miniMenu.Button.B, function (selection, selectedIndex) {
+        sprites.setDataNumber(menu_game_end_condition_selector, "menu_option_selected", 0)
+    })
+    for (let index = 0; index < game_options_end_condition_type + 1; index++) {
         miniMenu.moveSelection(menu_game_end_condition_selector, miniMenu.MoveDirection.Down)
     }
 }
@@ -861,6 +897,13 @@ function throw_ball_ai_and_wait_for_stop (ball: Sprite, effort: number) {
         pause(100)
     }
     sprites.setDataNumber(ball, "ball_thrown", 1)
+}
+function ternary_str (cond: boolean, s1: string, s2: string) {
+    if (cond) {
+        return s1
+    } else {
+        return s2
+    }
 }
 function xy_to_loc (x: number, y: number) {
     return tiles.getTileLocation(Math.floor(x / tiles.tileWidth()), Math.floor(y / tiles.tileWidth()))
@@ -928,10 +971,13 @@ let local_x = 0
 let local_game_points = 0
 let local_out_team = 0
 let sprite_pallino: Sprite = null
+let menu_sim_settings: Sprite = null
+let local_menu_sim_settings_last_idx = 0
 let menu_game_end_condition_selector: Sprite = null
 let menu_green_team_selector: Sprite = null
 let menu_red_team_selector: Sprite = null
 let menu_main_menu: Sprite = null
+let local_menu_main_menu_last_idx = 0
 let game_options_end_condition_type = 0
 let game_options_green_team_type = 0
 let game_options_red_team_type = 0
@@ -991,8 +1037,9 @@ timer.background(function () {
     if (true) {
         camera_move_to(scene.screenWidth() * 1.5 + 1, scene.screenHeight() * 0.5, true)
         while (true) {
-            menu_setup_main_menu()
+            menu_setup_main_menu(local_menu_main_menu_last_idx)
             pauseUntil(() => sprites.readDataNumber(menu_main_menu, "menu_option_selected") != -1)
+            local_menu_main_menu_last_idx = sprites.readDataNumber(menu_main_menu, "menu_option_selected")
             if (sprites.readDataNumber(menu_main_menu, "menu_option_selected") == 0) {
                 break;
             }
@@ -1001,17 +1048,43 @@ timer.background(function () {
                 menu_setup_red_team_selector()
                 pauseUntil(() => sprites.readDataNumber(menu_red_team_selector, "menu_option_selected") != -1)
                 miniMenu.close(menu_red_team_selector)
-                game_options_red_team_type = sprites.readDataNumber(menu_red_team_selector, "menu_option_selected")
+                if (sprites.readDataNumber(menu_red_team_selector, "menu_option_selected") == 0) {
+                	
+                } else {
+                    game_options_red_team_type = sprites.readDataNumber(menu_red_team_selector, "menu_option_selected") - 1
+                }
             } else if (sprites.readDataNumber(menu_main_menu, "menu_option_selected") == 2) {
                 menu_setup_green_team_selector()
                 pauseUntil(() => sprites.readDataNumber(menu_green_team_selector, "menu_option_selected") != -1)
                 miniMenu.close(menu_green_team_selector)
-                game_options_green_team_type = sprites.readDataNumber(menu_green_team_selector, "menu_option_selected")
+                if (sprites.readDataNumber(menu_green_team_selector, "menu_option_selected") == 0) {
+                	
+                } else {
+                    game_options_green_team_type = sprites.readDataNumber(menu_green_team_selector, "menu_option_selected") - 1
+                }
             } else if (sprites.readDataNumber(menu_main_menu, "menu_option_selected") == 3) {
                 menu_setup_game_end_condition_selector()
                 pauseUntil(() => sprites.readDataNumber(menu_game_end_condition_selector, "menu_option_selected") != -1)
                 miniMenu.close(menu_game_end_condition_selector)
-                game_options_end_condition_type = sprites.readDataNumber(menu_game_end_condition_selector, "menu_option_selected")
+                if (sprites.readDataNumber(menu_game_end_condition_selector, "menu_option_selected") == 0) {
+                	
+                } else {
+                    game_options_end_condition_type = sprites.readDataNumber(menu_game_end_condition_selector, "menu_option_selected") - 1
+                }
+            } else if (sprites.readDataNumber(menu_main_menu, "menu_option_selected") == 4) {
+                while (true) {
+                    menu_setup_sim_settings(local_menu_sim_settings_last_idx)
+                    pauseUntil(() => sprites.readDataNumber(menu_sim_settings, "menu_option_selected") != -1)
+                    miniMenu.close(menu_sim_settings)
+                    local_menu_sim_settings_last_idx = sprites.readDataNumber(menu_sim_settings, "menu_option_selected")
+                    if (sprites.readDataNumber(menu_sim_settings, "menu_option_selected") == 0) {
+                        break;
+                    } else if (sprites.readDataNumber(menu_sim_settings, "menu_option_selected") == 1) {
+                        SHOW_BALL_THROW_UI_SIMULATION = !(SHOW_BALL_THROW_UI_SIMULATION)
+                    } else if (sprites.readDataNumber(menu_sim_settings, "menu_option_selected") == 2) {
+                        SHOW_AI_SIMULATION = !(SHOW_AI_SIMULATION)
+                    }
+                }
             }
         }
         menu_main_menu.setFlag(SpriteFlag.AutoDestroy, true)
