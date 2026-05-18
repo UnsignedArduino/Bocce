@@ -278,6 +278,7 @@ function get_ball_from_id (states: number[][], ball_id: number) {
     return []
 }
 function camera_follow (s: Sprite) {
+    scene.cameraFollowSprite(sprite_camera)
     sprite_camera.follow(s)
 }
 function tile_at_ball_is_one_of_these (ball: number[], tile_images: any[]) {
@@ -465,6 +466,46 @@ function balls_physics_tick_do_velocities (state: number[][], dt: number) {
     }
 }
 function throw_ball_ui (ball: Sprite, states: any[]) {
+    if (true) {
+        text_sprite_instr1 = textsprite.create("U/D for power", 0, 15)
+        text_sprite_instr1.top = 4
+        text_sprite_instr1.left = 4
+        text_sprite_instr1.setFlag(SpriteFlag.RelativeToCamera, true)
+        local_x = text_sprite_instr1.x
+        local_y = text_sprite_instr1.y
+        text_sprite_instr1.bottom = 0
+        spriteutils.moveToAtSpeed(text_sprite_instr1, spriteutils.point(local_x, local_y), 200)
+    }
+    if (true) {
+        text_sprite_instr2 = textsprite.create("L/R for angle (CCW/CW)", 0, 15)
+        text_sprite_instr2.top = 14
+        text_sprite_instr2.left = 4
+        text_sprite_instr2.setFlag(SpriteFlag.RelativeToCamera, true)
+        local_x = text_sprite_instr2.x
+        local_y = text_sprite_instr2.y
+        text_sprite_instr2.bottom = 0
+        spriteutils.moveToAtSpeed(text_sprite_instr2, spriteutils.point(local_x, local_y), 200)
+    }
+    if (true) {
+        text_sprite_instr3 = textsprite.create("Hold B to move cam", 0, 15)
+        text_sprite_instr3.bottom = 116
+        text_sprite_instr3.left = 4
+        text_sprite_instr3.setFlag(SpriteFlag.RelativeToCamera, true)
+        local_x = text_sprite_instr3.x
+        local_y = text_sprite_instr3.y
+        text_sprite_instr3.top = 120
+        spriteutils.moveToAtSpeed(text_sprite_instr3, spriteutils.point(local_x, local_y), 200)
+    }
+    if (true) {
+        text_sprite_instr4 = textsprite.create("A to throw", 0, 15)
+        text_sprite_instr4.bottom = 106
+        text_sprite_instr4.left = 4
+        text_sprite_instr4.setFlag(SpriteFlag.RelativeToCamera, true)
+        local_x = text_sprite_instr4.x
+        local_y = text_sprite_instr4.y
+        text_sprite_instr4.top = 120
+        spriteutils.moveToAtSpeed(text_sprite_instr4, spriteutils.point(local_x, local_y), 200)
+    }
     ball_to_draw_throw_ui_around = ball
     if (SHOW_BALL_THROW_UI_SIMULATION) {
         timer.background(function () {
@@ -484,14 +525,20 @@ function throw_ball_ui (ball: Sprite, states: any[]) {
         } else if (controller.B.isPressed()) {
             camera_stop_follow()
             if (controller.up.isPressed() && !(controller.down.isPressed())) {
-                camera_move_to(scene.cameraProperty(CameraProperty.X) + 0, scene.cameraProperty(CameraProperty.Y) + -1, false)
+                scene.centerCameraAt(scene.cameraProperty(CameraProperty.X) + 0, scene.cameraProperty(CameraProperty.Y) + -1)
             } else if (controller.down.isPressed() && !(controller.up.isPressed())) {
-                camera_move_to(scene.cameraProperty(CameraProperty.X) + 0, scene.cameraProperty(CameraProperty.Y) + 1, false)
+                scene.centerCameraAt(scene.cameraProperty(CameraProperty.X) + 0, scene.cameraProperty(CameraProperty.Y) + 1)
             }
             if (controller.left.isPressed() && !(controller.right.isPressed())) {
-                camera_move_to(scene.cameraProperty(CameraProperty.X) + -1, scene.cameraProperty(CameraProperty.Y) + 0, false)
+                scene.centerCameraAt(scene.cameraProperty(CameraProperty.X) + -1, scene.cameraProperty(CameraProperty.Y) + 0)
             } else if (controller.right.isPressed() && !(controller.left.isPressed())) {
-                camera_move_to(scene.cameraProperty(CameraProperty.X) + 1, scene.cameraProperty(CameraProperty.Y) + 0, false)
+                scene.centerCameraAt(scene.cameraProperty(CameraProperty.X) + 1, scene.cameraProperty(CameraProperty.Y) + 0)
+            }
+            if (true) {
+                text_sprite_instr1.setText("U/D/L/R to move cam")
+                text_sprite_instr2.setText("")
+                text_sprite_instr3.setText("Release B to modify throw")
+                text_sprite_instr4.setText("A to throw")
             }
         } else {
             camera_follow(ball)
@@ -505,12 +552,34 @@ function throw_ball_ui (ball: Sprite, states: any[]) {
             } else if (controller.right.isPressed() && !(controller.left.isPressed())) {
                 throw_angle += spriteutils.consts(spriteutils.Consts.Pi) / -180
             }
+            if (true) {
+                text_sprite_instr1.setText("U/D for power")
+                text_sprite_instr2.setText("L/R for angle (CCW/CW)")
+                text_sprite_instr3.setText("Hold B to move cam")
+                text_sprite_instr4.setText("A to throw")
+            }
         }
         pause(0)
     }
     ball_to_draw_throw_ui_around = spriteutils.nullConsts(spriteutils.NullConsts.Null)
     apply_ball_throw_to_state(throw_angle, throw_power, sprites.readDataNumber(ball, "ball_id"), states)
     camera_stop_follow()
+    if (true) {
+        text_sprite_instr1.setFlag(SpriteFlag.AutoDestroy, true)
+        text_sprite_instr1.vy = -200
+    }
+    if (true) {
+        text_sprite_instr2.setFlag(SpriteFlag.AutoDestroy, true)
+        text_sprite_instr2.vy = -200
+    }
+    if (true) {
+        text_sprite_instr3.setFlag(SpriteFlag.AutoDestroy, true)
+        text_sprite_instr3.vy = 200
+    }
+    if (true) {
+        text_sprite_instr4.setFlag(SpriteFlag.AutoDestroy, true)
+        text_sprite_instr4.vy = 200
+    }
 }
 function record_pallino_start_spot () {
     sprite_pallino_start_spot = sprites.create(img`
@@ -545,6 +614,7 @@ function are_all_balls_stopped (state: number[][]) {
     return true
 }
 function camera_stop_follow () {
+    scene.cameraFollowSprite(null)
     sprite_camera.follow(null)
 }
 function end_condition_to_str (t: number) {
@@ -585,6 +655,7 @@ function these_sprites_are_overlapping (sprites2: any[]) {
     return false
 }
 function camera_move_to (x: number, y: number, animate: boolean) {
+    scene.cameraFollowSprite(sprite_camera)
     if (animate) {
         spriteutils.moveToAtSpeed(sprite_camera, spriteutils.point(x, y), 200)
     } else {
@@ -788,6 +859,10 @@ let throw_power = 0
 let throw_angle = 0
 let local_state_copy: number[][] = []
 let ball_to_draw_throw_ui_around: Sprite = null
+let text_sprite_instr4: TextSprite = null
+let text_sprite_instr3: TextSprite = null
+let text_sprite_instr2: TextSprite = null
+let text_sprite_instr1: TextSprite = null
 let local_state: number[] = []
 let local_states: number[][] = []
 let local_best_power2 = 0
@@ -840,7 +915,6 @@ sprite_camera = sprites.create(img`
     . 
     `, SpriteKind.UI)
 sprite_camera.setFlag(SpriteFlag.Ghost, true)
-scene.cameraFollowSprite(sprite_camera)
 timer.background(function () {
     tiles.loadMap(tiles.createSmallMap(tilemap`level2`))
     if (!(DEBUG)) {
@@ -879,7 +953,7 @@ timer.background(function () {
     game_options_red_team_type = 0
     game_options_green_team_type = 0
     game_options_end_condition_type = 0
-    if (true) {
+    if (!(DEBUG)) {
         camera_move_to(scene.screenWidth() * 1.5 + 1, scene.screenHeight() * 0.5, true)
         while (true) {
             menu_setup_main_menu()
@@ -905,8 +979,8 @@ timer.background(function () {
                 game_options_end_condition_type = sprites.readDataNumber(menu_game_end_condition_selector, "menu_option_selected")
             }
         }
+        menu_main_menu.setFlag(SpriteFlag.AutoDestroy, true)
     }
-    menu_main_menu.setFlag(SpriteFlag.AutoDestroy, true)
     sprites.destroyAllSpritesOfKind(SpriteKind.Text)
     init_balls()
     tiles.placeOnTile(sprite_pallino, tiles.getTileLocation(50, 35))
@@ -973,14 +1047,16 @@ timer.background(function () {
     local_y = text_sprite_temp.y
     text_sprite_temp.bottom = 0
     spriteutils.moveToAtSpeed(text_sprite_temp, spriteutils.point(local_x, local_y), 200)
-    text_sprite_temp = textsprite.create("Press A to restart", 0, 15)
-    text_sprite_temp.top = 110
-    text_sprite_temp.x = scene.screenWidth() / 2
-    local_x = text_sprite_temp.x
-    local_y = text_sprite_temp.y
-    text_sprite_temp.top = scene.screenHeight()
-    spriteutils.moveToAtSpeed(text_sprite_temp, spriteutils.point(local_x, local_y), 200)
-    text_sprite_temp.setFlag(SpriteFlag.RelativeToCamera, true)
+    if (true) {
+        text_sprite_temp = textsprite.create("Press A to restart", 0, 15)
+        text_sprite_temp.top = 110
+        text_sprite_temp.x = scene.screenWidth() / 2
+        local_x = text_sprite_temp.x
+        local_y = text_sprite_temp.y
+        text_sprite_temp.top = scene.screenHeight()
+        spriteutils.moveToAtSpeed(text_sprite_temp, spriteutils.point(local_x, local_y), 200)
+        text_sprite_temp.setFlag(SpriteFlag.RelativeToCamera, true)
+    }
     pauseUntil(() => controller.A.isPressed())
     color.startFade(color.originalPalette, color.Black, 2000)
     color.pauseUntilFadeDone()
