@@ -599,10 +599,10 @@ function balls_physics_tick_do_collisions (state: number[][], dt: number) {
                 local_ball_b[1] = local_ball_b[1] - local_dx / local_dist * (local_overlap * (local_ball_a[5] / local_M))
                 local_ball_b[2] = local_ball_b[2] - local_dy / local_dist * (local_overlap * (local_ball_a[5] / local_M))
                 local_dot = (local_ball_a[3] - local_ball_b[3]) * (local_ball_a[1] - local_ball_b[1]) + (local_ball_a[4] - local_ball_b[4]) * (local_ball_a[2] - local_ball_b[2])
-                local_ball_a[3] = local_ball_a[3] - 2 * local_ball_b[5] / local_M * (local_dot / local_dist_sq * (local_ball_a[1] - local_ball_b[1]))
-                local_ball_a[4] = local_ball_a[4] - 2 * local_ball_b[5] / local_M * (local_dot / local_dist_sq * (local_ball_a[2] - local_ball_b[2]))
-                local_ball_b[3] = local_ball_b[3] + 2 * local_ball_a[5] / local_M * (local_dot / local_dist_sq * (local_ball_a[1] - local_ball_b[1]))
-                local_ball_b[4] = local_ball_b[4] + 2 * local_ball_a[5] / local_M * (local_dot / local_dist_sq * (local_ball_a[2] - local_ball_b[2]))
+                local_ball_a[3] = local_ball_a[3] - (1 + 0.5) * local_ball_b[5] / local_M * (local_dot / local_dist_sq * (local_ball_a[1] - local_ball_b[1]))
+                local_ball_a[4] = local_ball_a[4] - (1 + 0.5) * local_ball_b[5] / local_M * (local_dot / local_dist_sq * (local_ball_a[2] - local_ball_b[2]))
+                local_ball_b[3] = local_ball_b[3] + (1 + 0.5) * local_ball_a[5] / local_M * (local_dot / local_dist_sq * (local_ball_a[1] - local_ball_b[1]))
+                local_ball_b[4] = local_ball_b[4] + (1 + 0.5) * local_ball_a[5] / local_M * (local_dot / local_dist_sq * (local_ball_a[2] - local_ball_b[2]))
             }
         }
     }
@@ -726,7 +726,7 @@ timer.background(function () {
         throw_ball_ui_and_wait_for_stop(sprite_pallino)
     }
     place_other_balls_wrt_pallino_start_spot()
-    if (true) {
+    if (false) {
         ai_throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 1)[0]), 3)
     } else {
         throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 1)[0]))
@@ -739,7 +739,7 @@ timer.background(function () {
     while (true) {
         local_out_team = get_out_team(get_balls_states(sprites.allOfKind(SpriteKind.Player)))
         if (local_out_team == 1) {
-            if (true) {
+            if (false) {
                 ai_throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 1)[0]), 3)
             } else {
                 throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 1)[0]))
