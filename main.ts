@@ -386,6 +386,16 @@ function balls_physics_tick_do_velocities (state: number[][], dt: number) {
 }
 function throw_ball_ui (ball: Sprite, states: any[]) {
     ball_to_draw_throw_ui_around = ball
+    if (SHOW_BALL_THROW_UI_SIMULATION) {
+        timer.background(function () {
+            while (ball_to_draw_throw_ui_around != spriteutils.nullConsts(spriteutils.NullConsts.Null)) {
+                local_state_copy = get_balls_states(sprites.allOfKind(SpriteKind.Player))
+                ghost_balls_to_render = local_state_copy
+                score_ball_throw_for_this_state(sprites.readDataNumber(ball_to_draw_throw_ui_around, "ball_id"), throw_angle, throw_power, local_state_copy)
+            }
+            ghost_balls_to_render = []
+        })
+    }
     throw_angle = 0
     throw_power = 50
     while (true) {
@@ -464,14 +474,14 @@ function get_next_unthrown_ball (states: number[][], ball_type: number) {
     }
     return []
 }
-function ai_throw_ball (ball: Sprite) {
+function ai_throw_ball (ball: Sprite, effort: number) {
     spriteutils.placeAngleFrom(
     ball,
     0,
     0,
     sprite_pallino_start_spot
     )
-    throw_ball_ai_and_wait_for_stop(ball, 3)
+    throw_ball_ai_and_wait_for_stop(ball, effort)
 }
 function these_sprites_are_overlapping (sprites2: any[]) {
     for (let index3 = 0; index3 <= sprites2.length - 1; index3++) {
@@ -641,7 +651,6 @@ function throw_ball_ai_and_wait_for_stop (ball: Sprite, effort: number) {
 function xy_to_loc (x: number, y: number) {
     return tiles.getTileLocation(Math.floor(x / tiles.tileWidth()), Math.floor(y / tiles.tileWidth()))
 }
-let local_state_copy: number[][] = []
 let local_move: number[] = []
 let local_target_ball: number[] = []
 let local_closest_ball4: number[] = []
@@ -667,6 +676,7 @@ let local_sprite_a: Sprite = null
 let local_states2: number[][] = []
 let throw_power = 0
 let throw_angle = 0
+let local_state_copy: number[][] = []
 let ball_to_draw_throw_ui_around: Sprite = null
 let local_state: number[] = []
 let local_states: number[][] = []
@@ -697,9 +707,10 @@ let local_out_team = 0
 let sprite_pallino: Sprite = null
 let ghost_balls_to_render: number[][] = []
 let SHOW_AI_SIMULATION = false
+let SHOW_BALL_THROW_UI_SIMULATION = false
 stats.turnStats(true)
 let DEBUG = true
-let SHOW_BALL_THROW_UI_SIMULATION = true
+SHOW_BALL_THROW_UI_SIMULATION = true
 SHOW_AI_SIMULATION = true
 ghost_balls_to_render = [[0, 1]]
 ghost_balls_to_render.pop()
@@ -716,12 +727,12 @@ timer.background(function () {
     }
     place_other_balls_wrt_pallino_start_spot()
     if (true) {
-        ai_throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 1)[0]))
+        ai_throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 1)[0]), 3)
     } else {
         throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 1)[0]))
     }
-    if (true) {
-        ai_throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 2)[0]))
+    if (false) {
+        ai_throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 2)[0]), 3)
     } else {
         throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 2)[0]))
     }
@@ -729,13 +740,13 @@ timer.background(function () {
         local_out_team = get_out_team(get_balls_states(sprites.allOfKind(SpriteKind.Player)))
         if (local_out_team == 1) {
             if (true) {
-                ai_throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 1)[0]))
+                ai_throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 1)[0]), 3)
             } else {
                 throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 1)[0]))
             }
         } else if (local_out_team == 2) {
-            if (true) {
-                ai_throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 2)[0]))
+            if (false) {
+                ai_throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 2)[0]), 3)
             } else {
                 throw_ball(get_ball_sprite_from_id(sprites.allOfKind(SpriteKind.Player), get_next_unthrown_ball(get_balls_states(sprites.allOfKind(SpriteKind.Player)), 2)[0]))
             }
@@ -752,15 +763,4 @@ game.onUpdate(function () {
         balls_physics_tick(global_ball_state, 1 / 30 / 4)
     }
     set_balls_states(sprites.allOfKind(SpriteKind.Player), global_ball_state)
-})
-forever(function () {
-    if (SHOW_BALL_THROW_UI_SIMULATION) {
-        if (ball_to_draw_throw_ui_around != spriteutils.nullConsts(spriteutils.NullConsts.Null)) {
-            local_state_copy = get_balls_states(sprites.allOfKind(SpriteKind.Player))
-            ghost_balls_to_render = local_state_copy
-            info.setScore(score_ball_throw_for_this_state(sprites.readDataNumber(ball_to_draw_throw_ui_around, "ball_id"), throw_angle, throw_power, local_state_copy))
-        } else {
-            ghost_balls_to_render = []
-        }
-    }
 })
