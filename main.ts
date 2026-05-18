@@ -710,7 +710,7 @@ let ghost_balls_to_render: number[][] = []
 let SHOW_AI_SIMULATION = false
 let SHOW_BALL_THROW_UI_SIMULATION = false
 stats.turnStats(true)
-let DEBUG = true
+let DEBUG = false
 SHOW_BALL_THROW_UI_SIMULATION = true
 SHOW_AI_SIMULATION = true
 ghost_balls_to_render = [[0, 1]]
@@ -746,9 +746,7 @@ timer.background(function () {
     color.startFade(color.Black, color.originalPalette, 2000)
     color.pauseUntilFadeDone()
     pauseUntil(() => controller.A.isPressed())
-    pause(100)
     pauseUntil(() => !(controller.A.isPressed()))
-    pause(100)
     sprites.destroyAllSpritesOfKind(SpriteKind.Text)
     init_balls()
     tiles.placeOnTile(sprite_pallino, tiles.getTileLocation(50, 35))
